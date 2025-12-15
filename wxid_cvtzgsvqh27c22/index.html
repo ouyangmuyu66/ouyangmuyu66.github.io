@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>2024 Report</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Hide content initially */
+    #content {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    /* Optional: basic style for lock */
+    #lock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 10px;
+      background: #f5f5f5;
+    }
+    #lock input {
+      padding: 8px;
+      font-size: 16px;
+    }
+    #lock button {
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PASSWORD FORM -->
+  <div id="lock">
+    <input type="password" id="pw" placeholder="Password">
+    <button onclick="unlock()">Enter</button>
+  </div>
+
+  <!-- SITE CONTENT -->
+  <div id="content">
+    <section class="hero">
+      <h1 class="load">2024 Report</h1>
+      <p class="load">Private archive</p>
+    </section>
+
+    <section class="content">
+      <div class="card reveal">Message block 1</div>
+      <div class="card reveal">Message block 2</div>
+      <div class="card reveal">Message block 3</div>
+    </section>
+  </div>
+
+  <!-- GSAP Animations -->
+  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+  <!-- PASSWORD + animation initialization -->
+  <script>
+    function unlock() {
+      const password = document.getElementById("pw").value;
+      if (password === "1") { // your password here
+        document.getElementById("lock").style.display = "none";
+
+        const content = document.getElementById("content");
+        content.style.visibility = "visible";
+
+        // Fade in entire content quickly
+        gsap.to(content, { opacity: 1, duration: 0.5 });
+
+        // Initialize animations after showing content
+        initAnimations();
+      } else {
+        alert("Incorrect password");
+      }
+    }
+
+    function initAnimations() {
+      // Load animations for hero section
+      gsap.from(".load", { opacity: 0, y: 50, duration: 1, stagger: 0.3 });
+
+      // Scroll-triggered reveal for cards
+      gsap.utils.toArray(".reveal").forEach((el) => {
+        gsap.from(el, {
+          scrollTrigger: {
+            trigger: el,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+        });
+      });
+    }
+  </script>
+
+  <!-- Your custom animations if any -->
+  <script src="anim.js"></script>
+
+</body>
+</html>
