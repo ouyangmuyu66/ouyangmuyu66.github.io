@@ -34,9 +34,10 @@ section {
   font-family: 'memo', sans-serif;
   /* font-size: clamp(20px, 5vw, 36px); */
   /* font-size: 8vw; too big on pc screen*/
-  font-size: 7vh;
+  font-size: 6vh;
   color: #000000;
   font-weight: normal;
   text-align: center;
 }
+
 
