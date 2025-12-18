@@ -1,17 +1,38 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
 @font-face {
   font-family: 'memo';
   src: url(fonts/MFSuHei-Noncommercial-Regular-2.ttf);
 }
 
+@font-face {
+  font-family: 'thin';
+  src: url(fonts/KeHeiTi-2.ttf);
+}
+
+@font-face {
+  font-family: 'this';
+  src: url(fonts/SourceHanSansOLD-Heavy-2.ttf);
+}
+
+.thin {
+  font-family: 'thin', sans-serif;
+}
+
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: #0f0f12;
-  color: #eaeaea;
+  background: transparent;
+  color: #000000;
 }
 
 section {
-  padding: 80px 20px;
+  padding: 60px 15px;
   min-height: 100vh;
 }
 
@@ -34,12 +55,101 @@ section {
   font-family: 'memo', sans-serif;
   /* font-size: clamp(20px, 5vw, 36px); */
   /* font-size: 8vw; too big on pc screen*/
-  font-size: 6vh;
+  font-size: 5vw;
   color: #000000;
   font-weight: normal;
   text-align: center;
 }
 
+.title {
+ 
+  font-weight: normal;
+  text-align: center;
+  background: linear-gradient(to bottom right,rgb(173, 116, 247),rgb(75, 132, 218));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
+h1 span.typing {
+  display: inline-block;
+  margin: 0;
+}
 
+#lockScreen {
+  text-align: center;
+  margin-top: 100px;
+  
+}
 
+#lockScreen input {
+  padding: 10px;
+  font-size: 16px;
+  
+}
+
+#lockScreen button {
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #ffffff; /* text on button */
+  background-color: #ff69b4; /* button background */
+  border: none;
+  border-radius: 12px; /* rounded edges */
+  cursor: pointer; /* hand pointer on hover */
+  
+}
+
+.customFont {
+  font-family: sans-serif, sans-serif; /* your custom font */
+  font-weight: normal; /* optional */
+  /* you can also add color or size if you want */
+  color: #313131; /* optional: make it stand out */
+}
+
+.typing { 
+  visibility: hidden; /*hide all text before type anim starts*/
+}
+
+:root {
+  --star-dimension: 2px;
+}
+
+/* STAR FIELD */
+#star-field {
+  position: fixed;
+  inset: 0;                 /* fills entire screen */
+  pointer-events: none;
+  z-index: -1;
+
+  /* 5-color gradient background */
+  background: linear-gradient(
+    to bottom,
+    #3b4faa,
+    #3248a8,
+    #4432a8,
+    #7332a8,
+    #a670bb
+  );
+}
+
+#star-field .star {
+  width: var(--star-dimension);
+  height: var(--star-dimension);
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+
+#star-field .star.far {
+  width: calc(var(--star-dimension) - 1px);
+  height: calc(var(--star-dimension) - 1px);
+}
+
+#star-field .star.near {
+  width: calc(var(--star-dimension) + 2px);
+  height: calc(var(--star-dimension) + 2px);
+}
+
+#star-field .star.white    { background: #fff;  box-shadow: 0 0 10px #fff; }
+#star-field .star.yellow   { background: #BFBB40; box-shadow: 0 0 10px #BFBB40; }
+#star-field .star.blue     { background: #4444ff; box-shadow: 0 0 10px #4444ff; }
+#star-field .star.red      { background: #ff4444; box-shadow: 0 0 10px #ff4444; }
