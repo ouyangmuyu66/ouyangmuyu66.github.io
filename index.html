@@ -3,26 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2025 回忆录</title>
-  
+  <title>Typing Animation Demo</title>
   <link rel="stylesheet" href="style.css" />
-
 </head>
+<body>
 
-<body style="background-color: rgb(247, 183, 255);">
-  <h1 class="h1">老婆大人 生日快乐</h1>
-  <!-- <img height="400px" width="300px" src="images/dudu.jpg"> -->
+  <div id="star-field" aria-hidden="true"></div>
 
+  <!-- PASSWORD SCREEN -->
+  <div id="lockScreen">
+    <h2>请输入密码</h2>
+    <input type="password" id="passwordInput" placeholder="密码">
+    <br><br>
+    <button onclick="checkPassword()">确认</button>
+    <p id="errorText" style="color:red"></p>
+  </div>
+  
+  
+  <!-- REAL CONTENT (LOCKED) -->
+  <div id="content" style="display:none;">
+    <section class="typing-group h1">
+
+      <h1>
+        <span class="typing thin title" data-speed="60">2025</span>
+        <span class="typing title" data-speed="60">年快结束了</span>
+      </h1>
+
+      <p class="typing" data-speed="40">
+        记录 No.01：她出现的那天
+      </p>
+
+      <p class="typing">
+        This is third
+      </p>
+
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+    </section>
+        <section class="typing-group">
+      <h1 class="typing" data-speed="60">
+        This text types first
+      </h1>
+
+      <p class="typing" data-speed="40">
+        This starts ONLY after the first finishes
+      </p>
+
+      <p class="typing">
+        This is third
+      </p>
+    </section>
+        <section class="typing-group">
+      <h1 class="typing" data-speed="60">
+        This text types first
+      </h1>
+
+      <p class="typing" data-speed="40">
+        This starts ONLY after the first finishes
+      </p>
+
+      <p class="typing">
+        This is third
+      </p>
+    </section>
+        <section class="typing-group">
+      <h1 class="typing" data-speed="60">
+        This text types first
+      </h1>
+
+      <p class="typing" data-speed="40">
+        This starts ONLY after the first finishes
+      </p>
+
+      <p class="typing">
+        This is third
+      </p>
+    </section>
+  </div>
+
+  <!-- Include your reusable typing animation -->
+  <script src="anim.js"></script>
+
+  <!-- Password + trigger typing -->
+  <script>
+    function checkPassword() {
+      var input = document.getElementById("passwordInput").value;
+      var correctPassword = "1";
+
+      if (input === correctPassword) {
+        document.getElementById("lockScreen").style.display = "none";
+        document.getElementById("content").style.display = "block";
+
+        // small delay so content is visible before animation
+        setTimeout(function() {
+          TypingAnim.apply('.typing');
+        }, 50);
+
+      } else {
+        document.getElementById("errorText").innerText = "Wrong password";
+      }
+    }
+  </script>
+<script src="anim.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
