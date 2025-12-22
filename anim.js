@@ -153,3 +153,35 @@
   animate();
 
 })();
+
+
+// Select all buttons
+// --- Scroll-button behaviour: scroll to NEXT SECTION, hide on last ---
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('.scroll-button');
+
+  buttons.forEach(button => {
+    // find the section that contains this button
+    const section = button.closest('section');
+    if (!section) return;
+
+    // If this is the last section, hide the button
+    if (!section.nextElementSibling) {
+      button.style.display = 'none';
+      return;
+    }
+
+    // (Optional) ensure the button is positioned relative to its section
+    // so `right/bottom` are measured from the section, not the viewport.
+    // Remove/comment this line if you want the button fixed to viewport.
+    section.style.position = section.style.position || 'relative';
+
+    button.addEventListener('click', (e) => {
+      const nextSection = section.nextElementSibling;
+      if (nextSection) {
+        nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+});
+

@@ -12,7 +12,7 @@
 
   <!-- PASSWORD SCREEN -->
   <div id="lockScreen">
-    <h2>请输入密码</h2>
+    <h1 class="login_title">请输入密码</h1>
     <input type="password" id="passwordInput" placeholder="密码">
     <br><br>
     <button onclick="checkPassword()">确认</button>
@@ -20,13 +20,26 @@
   </div>
   
   
+  <!-- LOADING SCREEN -->
+    <div id="loadingScreen" class="loading" style="display:none;">
+      <svg width="64px" height="48px">
+        <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
+        <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
+      </svg>
+    </div>
+
   <!-- REAL CONTENT (LOCKED) -->
   <div id="content" style="display:none;">
-    <section class="typing-group h1">
+    <section class="typing-group h1" id="section1">
 
       <h1>
         <span class="typing thin title" data-speed="60">2025</span>
         <span class="typing title" data-speed="60">年快结束了</span>
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">⮟</span>
       </h1>
 
       <p class="typing" data-speed="40">
@@ -46,6 +59,27 @@
             <p class="typing">
         This is third
       </p>
+    </section>
+      <section class="typing-group h1" id="section2">
+
+      <h1>
+        <span class="typing thin title" data-speed="60">2025</span>
+        <span class="typing title" data-speed="60">年快结束了</span>
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">⮟</span>
+      </h1>
+
+      <p class="typing" data-speed="40">
+        记录 No.01：她出现的那天
+      </p>
+
+      <p class="typing">
+        This is third
+      </p>
+
             <p class="typing">
         This is third
       </p>
@@ -55,71 +89,146 @@
             <p class="typing">
         This is third
       </p>
-    </section>
-        <section class="typing-group">
-      <h1 class="typing" data-speed="60">
-        This text types first
+    </section>  
+
+      <section class="typing-group h1" id="section3">
+
+      <h1>
+        <span class="typing thin title" data-speed="60">2025</span>
+        <span class="typing title" data-speed="60">年快结束了</span>
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">⮟</span>
+          
+      
+        </button>
       </h1>
 
       <p class="typing" data-speed="40">
-        This starts ONLY after the first finishes
+        记录 No.01：她出现的那天
       </p>
 
       <p class="typing">
         This is third
       </p>
-    </section>
-        <section class="typing-group">
-      <h1 class="typing" data-speed="60">
-        This text types first
+
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+    </section>  
+
+          <section class="typing-group h1" id="section3">
+
+      <h1>
+        <span class="typing thin title" data-speed="60">2025</span>
+        <span class="typing title" data-speed="60">年快结束了</span>
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">⮟</span>
       </h1>
 
       <p class="typing" data-speed="40">
-        This starts ONLY after the first finishes
+        记录 No.01：她出现的那天
       </p>
 
       <p class="typing">
         This is third
       </p>
-    </section>
-        <section class="typing-group">
-      <h1 class="typing" data-speed="60">
-        This text types first
-      </h1>
 
-      <p class="typing" data-speed="40">
-        This starts ONLY after the first finishes
-      </p>
-
-      <p class="typing">
+            <p class="typing">
         This is third
       </p>
-    </section>
+            <p class="typing">
+        This is third
+      </p>
+            <p class="typing">
+        This is third
+      </p>
+    </section>  
+
+
   </div>
 
-  <!-- Include your reusable typing animation -->
-  <script src="anim.js"></script>
 
   <!-- Password + trigger typing -->
-  <script>
-    function checkPassword() {
-      var input = document.getElementById("passwordInput").value;
-      var correctPassword = "1";
+<script>
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value;
+  const correctPassword = "1";
 
-      if (input === correctPassword) {
-        document.getElementById("lockScreen").style.display = "none";
-        document.getElementById("content").style.display = "block";
+  const btn = document.querySelector('#lockScreen button');
+  const lockScreen = document.getElementById("lockScreen");
+  const loader = document.getElementById("loadingScreen");
+  const content = document.getElementById("content");
 
-        // small delay so content is visible before animation
-        setTimeout(function() {
-          TypingAnim.apply('.typing');
-        }, 50);
+  // Configurable delays
+  const pressedDelay = 500; // how long pressed state is visible (ms)
+  const minLoader = 2000;   // minimum loader duration (ms)
 
-      } else {
-        document.getElementById("errorText").innerText = "Wrong password";
-      }
-    }
+  // --- WRONG PASSWORD ---
+  if (input !== correctPassword) {
+    document.getElementById("errorText").innerText = "Wrong password";
+
+    // remove pressed state if present
+    btn.classList.remove('pressed');
+    return;
+  }
+
+  // --- CORRECT PASSWORD ---
+  // show pressed state
+  btn.classList.add('pressed');
+
+  // force browser to repaint so pressed state is visible
+  requestAnimationFrame(() => {
+
+    setTimeout(() => {
+      // hide password screen
+      lockScreen.style.display = "none";
+
+      // show loader
+      loader.style.display = "flex";
+
+      const loaderStart = Date.now();
+
+      // wait for fonts to load
+      document.fonts.ready.then(() => {
+        const elapsed = Date.now() - loaderStart;
+        const remaining = Math.max(minLoader - elapsed, 0);
+
+        setTimeout(() => {
+          // hide loader, show content
+          loader.style.display = "none";
+          content.style.display = "block";
+
+          // remove pressed state after everything
+          btn.classList.remove('pressed');
+        }, remaining);
+      });
+
+    }, pressedDelay);
+
+  });
+}
+</script>
+
+
+
+
+
+
+
   </script>
+
 <script src="anim.js"></script>
 </body>
 </html>
