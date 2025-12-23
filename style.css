@@ -361,6 +361,7 @@ h1 span.typing {
     width: clamp(20px,6vh,110px);
     height: clamp(120px,25vh,300px);
     font-size: clamp(7px, 2.5vh, 30px);
+   
 
     bottom: 200px; /* bottom of section */
     text-align: center;
@@ -371,7 +372,8 @@ h1 span.typing {
     display: flex;
     flex-direction: column;
     justify-content: center;
-  
+    align-items: center;
+
     gap: 2px;
 
     position: absolute;
