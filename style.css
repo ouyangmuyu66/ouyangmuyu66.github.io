@@ -352,24 +352,26 @@ h1 span.typing {
 #star-field .star.blue     { background: #4444ff; box-shadow: 0 0 10px #4444ff; }
 #star-field .star.red      { background: #ff4444; box-shadow: 0 0 10px #ff4444; }
 
-
+:root {
+  --scroll-btn-size: clamp(48px, 8vh, 96px);
+}
 /* Scroll button style */
 .scroll-button {
-    width: clamp(50px,20vh,200px);
-    height: clamp(20px,20vh,300px);
+    right: 0%;
+    width: clamp(20px,6vh,110px);
+    height: clamp(120px,25vh,300px);
     font-size: clamp(7px, 2.5vh, 30px);
-    border-radius: clamp(5px,5vh,80px);
 
-    right: clamp(-85px,-20vh,-105px); /* right side */
-    bottom: 60px; /* bottom of section */
-    text-align: left;
-    padding-left: clamp(10px,2.8vh,45px);
-    
+    bottom: 200px; /* bottom of section */
+    text-align: center;
+
+    border-top-left-radius: 60px;   /* half of height for perfect curve */
+    border-bottom-left-radius: 60px;  
 
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
+  
     gap: 2px;
 
     position: absolute;
