@@ -1,15 +1,13 @@
-// anim.js
+// anim.js (replace entire file)
 (function () {
-  // -------------------------- Typing animation (RAF-driven) --------------------------
-  // Uses a single requestAnimationFrame loop per typing group to reveal characters.
+  // -------------------------- Typing animation (quote-right exactly like original, gif reveal restored) --------------------------
   function prepareTypingElement(el) {
-    // Convert text nodes into spans (but do it once)
     if (el.dataset.prepared === "true") return;
     el.dataset.prepared = "true";
 
     el.style.visibility = "hidden";
     const children = Array.from(el.childNodes);
-    el.textContent = ""; // clear
+    el.textContent = "";
 
     children.forEach(node => {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -21,7 +19,7 @@
           el.appendChild(span);
         }
       } else {
-        // keep nodes (images etc.) as-is, hide delayed gifs
+        // Keep non-text nodes, but hide delayed gifs until the paragraph finishes
         if (node.tagName === 'IMG' && node.classList.contains('delayed')) {
           node.style.visibility = 'hidden';
         }
@@ -31,56 +29,75 @@
   }
 
   function playTypingForElement(el, speed, onComplete) {
-    // speed is ms per char (like before)
     prepareTypingElement(el);
     el.style.visibility = "visible";
+
     const spans = Array.from(el.querySelectorAll('span'));
     if (spans.length === 0) {
-      // if empty, finish immediately
+      // reveal delayed gif if present and finish immediately
+      const gifFallback = el.querySelector('img.delayed');
+      if (gifFallback) gifFallback.style.visibility = "visible";
       if (onComplete) onComplete();
       return;
     }
 
     const quoteRight = el.parentElement ? el.parentElement.querySelector('.quote-right') : null;
     if (quoteRight) {
-      quoteRight.style.opacity = 1; // make visible immediately (will animate later)
-      quoteRight.style.transform = 'translateX(0px)';
+      quoteRight.style.opacity = 1;
+      // small transition for per-letter snap (keeps original snapping feel)
+      quoteRight.style.transition = 'transform 0.05s linear';
     }
 
     let index = 0;
     let lastTime = performance.now();
     let acc = 0;
-    const perChar = Math.max(10, speed); // avoid extremely small values
+    const perChar = Math.max(10, speed);
 
     function step(now) {
       const dt = now - lastTime;
       lastTime = now;
       acc += dt;
 
-      // reveal as many characters as the elapsed time allows
       while (acc >= perChar && index < spans.length) {
-        spans[index].style.opacity = 1;
+        const s = spans[index];
+        s.style.opacity = 1;
+
+        if (quoteRight) {
+          try {
+            // per-letter positioning (as in your original behavior)
+            const rect = s.getBoundingClientRect();
+            const parentRect = el.parentElement.getBoundingClientRect();
+            const x = rect.right - parentRect.left;
+            const y = rect.top - parentRect.top;
+            quoteRight.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+          } catch (e) {
+            // ignore any DOM reading errors
+          }
+        }
+
         index++;
         acc -= perChar;
       }
 
       if (index >= spans.length) {
-        // done
-        // reveal delayed image if present
+        // reveal delayed gif exactly like your original code
         const gif = el.querySelector('img.delayed');
         if (gif) gif.style.visibility = "visible";
 
-        // animate quote-right to an approximate final place (no layout reads per letter)
+        // final position snap to the end of the element (exact style as original)
         if (quoteRight) {
-          quoteRight.style.opacity = 1;
-          quoteRight.style.transform = 'translateX(8px)';
-          // small timeout to ensure final placement is visible
-          setTimeout(() => {
-            if (onComplete) onComplete();
-          }, 120);
-        } else {
-          if (onComplete) onComplete();
+          try {
+            const elRect = el.getBoundingClientRect();
+            const parentRect = el.parentElement.getBoundingClientRect();
+            const finalX = elRect.right - parentRect.left;
+            const finalY = elRect.top - parentRect.top;
+            quoteRight.style.transform = `translate(${Math.round(finalX)}px, ${Math.round(finalY)}px)`;
+          } catch (e) {
+            // ignore
+          }
         }
+
+        if (onComplete) setTimeout(onComplete, 50);
         return;
       }
 
@@ -127,18 +144,18 @@
 
   document.addEventListener("DOMContentLoaded", observeGroups);
 
-  // -------------------------- Canvas starfield (single canvas) --------------------------
+  // -------------------------- Canvas starfield w/ glow --------------------------
   (function () {
     const canvas = document.getElementById('star-field');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d', { alpha: true });
     let w = 0, h = 0, cx = 0, cy = 0;
-    let stars = [];
     const DEPTH = 8;
-    const BASE_SPEED = 0.0028; // tune this
-    const STAR_COUNT = 80;     // reduce count to be mobile-friendly — you can increase if needed
+    const BASE_SPEED = 0.0028;
+    const STAR_COUNT = 80;
     const BASE_SIZE = 2.2;
+    let stars = [];
 
     function resize() {
       const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -146,13 +163,11 @@
       h = canvas.clientHeight = window.innerHeight;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cx = w * 0.62;
       cy = h * 0.5;
-      // recreate stars on major resizes
       initStars();
+      drawBackground();
     }
 
     function initStars() {
@@ -174,9 +189,7 @@
       s.color = Math.random();
     }
 
-    // pre-render a subtle gradient background to canvas once for lower paint cost
     function drawBackground() {
-      // draw gradient background (cheap)
       const g = ctx.createLinearGradient(0, 0, 0, h);
       g.addColorStop(0, '#030614');
       g.addColorStop(0.35, '#112049');
@@ -191,12 +204,11 @@
       const dt = now - last;
       last = now;
 
-      // clear efficiently (single rectangle)
       drawBackground();
 
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
-        s.z -= BASE_SPEED * (dt);
+        s.z -= BASE_SPEED * dt;
         if (s.z <= 0.12) {
           resetStar(s);
           continue;
@@ -204,32 +216,35 @@
         const scale = 1 / s.z;
         const x = cx + s.x * scale;
         const y = cy + s.y * scale;
-        const size = Math.max(0.6, BASE_SIZE * scale);
+        const size = Math.max(0.5, BASE_SIZE * scale);
         const alpha = s.z < 2 ? Math.max(s.z / 2, 0) : 1.0;
 
-        // color mixing simple
-        const col = (s.color < 0.25) ? `rgba(255,255,255,${alpha})` :
-                    (s.color < 0.6) ? `rgba(191,187,64,${alpha})` :
-                    (s.color < 0.8) ? `rgba(68,68,255,${alpha})` :
-                                     `rgba(255,68,68,${alpha})`;
+        let base;
+        if (s.color < 0.25) base = '255,255,255';
+        else if (s.color < 0.6) base = '191,187,64';
+        else if (s.color < 0.8) base = '68,68,255';
+        else base = '255,68,68';
+
+        const glowRadius = size * 6;
+        const rg = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+        rg.addColorStop(0, `rgba(${base}, ${alpha * 0.9})`);
+        rg.addColorStop(0.3, `rgba(${base}, ${alpha * 0.45})`);
+        rg.addColorStop(1, `rgba(${base}, 0)`);
 
         ctx.beginPath();
-        ctx.fillStyle = col;
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fillStyle = rg;
+        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${base}, ${Math.min(1, alpha + 0.2)})`;
+        ctx.arc(x, y, Math.max(0.6, size * 0.55), 0, Math.PI * 2);
         ctx.fill();
       }
 
       requestAnimationFrame(animate);
     }
 
-    window.addEventListener('resize', debounce(resize, 120));
-    resize();
-    initStars();
-    // draw background once to avoid initial blank
-    drawBackground();
-    requestAnimationFrame(animate);
-
-    // simple debounce helper to avoid many resizes
     function debounce(fn, ms) {
       let t;
       return function () {
@@ -237,9 +252,14 @@
         t = setTimeout(() => fn(), ms);
       };
     }
+
+    window.addEventListener('resize', debounce(resize, 120));
+    resize();
+    initStars();
+    requestAnimationFrame(animate);
   })();
 
-  // -------------------- Scroll button behaviour (unchanged, light) ------------------------------
+  // -------------------- Scroll button ------------------------------
   document.addEventListener("DOMContentLoaded", () => {
     const buttons = document.querySelectorAll('.scroll-button');
 
@@ -260,5 +280,4 @@
       }, { passive: true });
     });
   });
-
 })();

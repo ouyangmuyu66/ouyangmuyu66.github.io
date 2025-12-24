@@ -72,7 +72,7 @@ html, body {
 .quote-right {
   font-family: 'norm', sans-serif;
   position: absolute;
-  right: 0;
+  right: -200;
   top: 0;
   line-height: 1;
   opacity: 0;
