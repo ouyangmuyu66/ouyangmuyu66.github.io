@@ -1,27 +1,69 @@
 (function () {
 
-  function typeElement(el, speed, done) {
-    el.style.visibility = "visible"; //show text only when typing animation start
-    var text = el.textContent;
+  function typeElement(el, speed, done, cursorSpeed = 0.5) { 
+    // cursorSpeed = multiplier of typing speed, e.g., 0.5 = cursor moves faster
+    el.style.visibility = "visible";
+
+    const children = Array.from(el.childNodes);
+    const letters = [];
     el.textContent = "";
 
-    var letters = [];
-    for (var i = 0; i < text.length; i++) {
-      var span = document.createElement("span");
-      span.textContent = text[i];
-      span.style.opacity = 0;
-      el.appendChild(span);
-      letters.push(span);
-    }
+    const quoteRight = el.parentElement.querySelector('.quote-right');
+    if (quoteRight) quoteRight.style.opacity = 1;
+
+    children.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        for (let i = 0; i < text.length; i++) {
+          const span = document.createElement("span");
+          span.textContent = text[i];
+          span.style.opacity = 0;
+          el.appendChild(span);
+          letters.push(span);
+        }
+      } else {
+        if (node.tagName === 'IMG' && node.classList.contains('delayed')) {
+          node.style.visibility = 'hidden';
+        }
+        el.appendChild(node);
+      }
+    });
 
     for (let i = 0; i < letters.length; i++) {
-      (function (index) {
-        setTimeout(function () {
+      (function(index) {
+        setTimeout(function() {
           letters[index].style.opacity = 1;
 
-          // when last letter finishes
-          if (index === letters.length - 1 && done) {
-            setTimeout(done, speed);
+          if (quoteRight) {
+            const letterRect = letters[index].getBoundingClientRect();
+            const containerRect = el.parentElement.getBoundingClientRect();
+            // animate cursor separately, faster than typing
+            quoteRight.style.transition = `left ${speed * cursorSpeed}ms linear, top ${speed * cursorSpeed}ms linear`;
+            quoteRight.style.left = (letterRect.right - containerRect.left) + 'px';
+            quoteRight.style.top  = (letterRect.top - containerRect.top) + 'px';
+          }
+
+          if (index === letters.length - 1) {
+            const gif = el.querySelector('img.delayed');
+            if (gif) gif.style.visibility = "visible";
+
+            if (quoteRight) {
+              const container = el.parentElement;
+              const containerRect = container.getBoundingClientRect();
+              let finalLeft = containerRect.width;
+              
+
+              const offsetX = -0; // adjust manually
+                    // Apply your manual tweaks
+              finalLeft += offsetX; // negative moves left, positive moves right
+             
+
+              quoteRight.style.transition = 'left 0.2s ease-out, top 0.2s ease-out';
+              quoteRight.style.left = finalLeft + 'px';
+              
+            }
+
+            if (done) setTimeout(done, speed);
           }
         }, index * speed);
       })(i);
@@ -32,41 +74,38 @@
     if (group.dataset.played === "true") return;
     group.dataset.played = "true";
 
-    var items = group.querySelectorAll(".typing");
-    var index = 0;
+    const items = group.querySelectorAll(".typing");
+    let index = 0;
 
     function playNext() {
       if (index >= items.length) return;
 
-      var el = items[index];
-      var speed = parseInt(el.getAttribute("data-speed"), 10) || 50;
+      const el = items[index];
+      const speed = parseInt(el.getAttribute("data-speed"), 20) || 60;
+      const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.0;
 
-      typeElement(el, speed, function () {
+      typeElement(el, speed, function() {
         index++;
         playNext();
-      });
+      }, cursorSpeed);
     }
 
     playNext();
   }
 
   function observeGroups() {
-    var groups = document.querySelectorAll(".typing-group");
+    const groups = document.querySelectorAll(".typing-group");
 
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           playGroup(entry.target);
           observer.unobserve(entry.target);
         }
       });
-    }, {
-      threshold: 0.5
-    });
+    }, { threshold: 0.5 });
 
-    groups.forEach(function (group) {
-      observer.observe(group);
-    });
+    groups.forEach(group => observer.observe(group));
   }
 
   document.addEventListener("DOMContentLoaded", observeGroups);
@@ -74,25 +113,25 @@
 })();
 
 
-/* Star field: initialize after DOM ready */
+
+// -------------------- Star field (unchanged) -------------------------------
 (function () {
 
-  const STAR_COUNT = 120;
-  const SPEED = 0.0035;           // forward movement speed
-  const DEPTH = 8;               // how deep space is
-  const BASE_SIZE = 2.2;
-  const FADE_START = 1.4;        // when stars start fading
+  const STAR_COUNT = 120; // number of stars
+  const SPEED = 0.0035;   // forward movement speed
+  const DEPTH = 8;        // depth of field
+  const BASE_SIZE = 4;
+  const FADE_START = 2;
 
   const field = document.getElementById('star-field');
-  const stars = [];
+  if (!field) return;
 
+  const stars = [];
   let w, h, vpX, vpY;
 
   function resize() {
     w = window.innerWidth;
     h = window.innerHeight;
-
-    // 🔹 Vanishing point: slightly right of center
     vpX = w * 0.62;
     vpY = h * 0.5;
   }
@@ -119,34 +158,23 @@
     star.z = DEPTH;
   }
 
-  for (let i = 0; i < STAR_COUNT; i++) {
-    stars.push(createStar());
-  }
+  for (let i = 0; i < STAR_COUNT; i++) stars.push(createStar());
 
   function animate() {
     for (const star of stars) {
       star.z -= SPEED;
-
       if (star.z <= 0.15) {
         resetStar(star);
         continue;
       }
-
       const scale = 1 / star.z;
       const x = vpX + star.x * scale;
       const y = vpY + star.y * scale;
       const size = BASE_SIZE * scale;
-
-      const opacity =
-        star.z < FADE_START
-          ? Math.max(star.z / FADE_START, 0)
-          : 1;
-
-      star.el.style.transform =
-        `translate(${x}px, ${y}px) scale(${size})`;
+      const opacity = star.z < FADE_START ? Math.max(star.z / FADE_START, 0) : 1;
+      star.el.style.transform = `translate(${x}px, ${y}px) scale(${size})`;
       star.el.style.opacity = opacity;
     }
-
     requestAnimationFrame(animate);
   }
 
@@ -155,33 +183,24 @@
 })();
 
 
-// Select all buttons
-// --- Scroll-button behaviour: scroll to NEXT SECTION, hide on last ---
+// -------------------- Scroll button behaviour ------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const buttons = document.querySelectorAll('.scroll-button');
 
   buttons.forEach(button => {
-    // find the section that contains this button
     const section = button.closest('section');
     if (!section) return;
 
-    // If this is the last section, hide the button
     if (!section.nextElementSibling) {
       button.style.display = 'none';
       return;
     }
 
-    // (Optional) ensure the button is positioned relative to its section
-    // so `right/bottom` are measured from the section, not the viewport.
-    // Remove/comment this line if you want the button fixed to viewport.
     section.style.position = section.style.position || 'relative';
 
-    button.addEventListener('click', (e) => {
-      const nextSection = section.nextElementSibling;
-      if (nextSection) {
-        nextSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+    button.addEventListener('click', () => {
+      const next = section.nextElementSibling;
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 });
-
