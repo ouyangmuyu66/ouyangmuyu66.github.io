@@ -1,7 +1,7 @@
+// -------------------- Optimized Typing Animation -------------------------
 (function () {
 
-  function typeElement(el, speed, done, cursorSpeed = 0.5) { 
-    // cursorSpeed = multiplier of typing speed, e.g., 0.5 = cursor moves faster
+  function typeElement(el, speed, done, cursorSpeed = 0.5) {
     el.style.visibility = "visible";
 
     const children = Array.from(el.childNodes);
@@ -11,6 +11,7 @@
     const quoteRight = el.parentElement.querySelector('.quote-right');
     if (quoteRight) quoteRight.style.opacity = 1;
 
+    // create spans for text nodes
     children.forEach(node => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent;
@@ -29,45 +30,44 @@
       }
     });
 
-    for (let i = 0; i < letters.length; i++) {
-      (function(index) {
-        setTimeout(function() {
+    let index = 0;
+    let lastTime = null;
+
+    function step(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const elapsed = timestamp - lastTime;
+
+      if (elapsed >= speed) {
+        if (index < letters.length) {
           letters[index].style.opacity = 1;
 
           if (quoteRight) {
-            const letterRect = letters[index].getBoundingClientRect();
+            const rect = letters[index].getBoundingClientRect();
             const containerRect = el.parentElement.getBoundingClientRect();
-            // animate cursor separately, faster than typing
-            quoteRight.style.transition = `left ${speed * cursorSpeed}ms linear, top ${speed * cursorSpeed}ms linear`;
-            quoteRight.style.left = (letterRect.right - containerRect.left) + 'px';
-            quoteRight.style.top  = (letterRect.top - containerRect.top) + 'px';
+            quoteRight.style.transform = `translate(${rect.right - containerRect.left}px, ${rect.top - containerRect.top}px)`;
           }
 
-          if (index === letters.length - 1) {
-            const gif = el.querySelector('img.delayed');
-            if (gif) gif.style.visibility = "visible";
+          index++;
+        } else {
+          // finished
+          const gif = el.querySelector('img.delayed');
+          if (gif) gif.style.visibility = "visible";
 
-            if (quoteRight) {
-              const container = el.parentElement;
-              const containerRect = container.getBoundingClientRect();
-              let finalLeft = containerRect.width;
-              
-
-              const offsetX = -0; // adjust manually
-                    // Apply your manual tweaks
-              finalLeft += offsetX; // negative moves left, positive moves right
-             
-
-              quoteRight.style.transition = 'left 0.2s ease-out, top 0.2s ease-out';
-              quoteRight.style.left = finalLeft + 'px';
-              
-            }
-
-            if (done) setTimeout(done, speed);
+          if (quoteRight) {
+            const containerRect = el.parentElement.getBoundingClientRect();
+            quoteRight.style.transition = 'transform 0.2s ease-out';
+            quoteRight.style.transform = `translate(${containerRect.width}px, 0px)`;
           }
-        }, index * speed);
-      })(i);
+
+          if (done) done();
+          return;
+        }
+        lastTime = timestamp;
+      }
+      requestAnimationFrame(step);
     }
+
+    requestAnimationFrame(step);
   }
 
   function playGroup(group) {
@@ -79,10 +79,9 @@
 
     function playNext() {
       if (index >= items.length) return;
-
       const el = items[index];
-      const speed = parseInt(el.getAttribute("data-speed"), 20) || 60;
-      const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.0;
+      const speed = parseInt(el.getAttribute("data-speed"), 10) || 60;
+      const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.5;
 
       typeElement(el, speed, function() {
         index++;
@@ -111,6 +110,7 @@
   document.addEventListener("DOMContentLoaded", observeGroups);
 
 })();
+
 
 
 
