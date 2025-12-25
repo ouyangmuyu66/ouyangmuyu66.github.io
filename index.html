@@ -177,60 +177,36 @@
   <!-- Password + trigger typing -->
 <script>
 function checkPassword() {
+  // (unchanged)
   const input = document.getElementById("passwordInput").value;
   const correctPassword = "1";
-
   const btn = document.querySelector('#lockScreen button');
   const lockScreen = document.getElementById("lockScreen");
   const loader = document.getElementById("loadingScreen");
   const content = document.getElementById("content");
-
-  // Configurable delays
-  const pressedDelay = 500; // how long pressed state is visible (ms)
-  const minLoader = 2000;   // minimum loader duration (ms)
-
-  // --- WRONG PASSWORD ---
+  const pressedDelay = 500; // ms
+  const minLoader = 2000;   // ms
   if (input !== correctPassword) {
     document.getElementById("errorText").innerText = "Wrong password";
-
-    // remove pressed state if present
     btn.classList.remove('pressed');
     return;
   }
-
-  // --- CORRECT PASSWORD ---
-  // show pressed state
   btn.classList.add('pressed');
-
-  // force browser to repaint so pressed state is visible
   requestAnimationFrame(() => {
-
     setTimeout(() => {
-      // hide password screen
       lockScreen.style.display = "none";
-
-      // show loader
       loader.style.display = "flex";
-
       const loaderStart = Date.now();
-
-      // wait for fonts to load
       document.fonts.ready.then(() => {
         const elapsed = Date.now() - loaderStart;
         const remaining = Math.max(minLoader - elapsed, 0);
-
         setTimeout(() => {
-          // hide loader, show content
           loader.style.display = "none";
           content.style.display = "block";
-
-          // remove pressed state after everything
           btn.classList.remove('pressed');
         }, remaining);
       });
-
     }, pressedDelay);
-
   });
 }
 </script>

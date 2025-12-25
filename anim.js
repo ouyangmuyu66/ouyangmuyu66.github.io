@@ -81,7 +81,7 @@
       if (index >= items.length) return;
 
       const el = items[index];
-      const speed = parseInt(el.getAttribute("data-speed"), 20) || 60;
+      const speed = parseInt(el.getAttribute("data-speed"), 10) || 10;
       const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.0;
 
       typeElement(el, speed, function() {
@@ -171,8 +171,11 @@
       const x = vpX + star.x * scale;
       const y = vpY + star.y * scale;
       const size = BASE_SIZE * scale;
-      const opacity = star.z < FADE_START ? Math.max(star.z / FADE_START, 0) : 1;
-      star.el.style.transform = `translate(${x}px, ${y}px) scale(${size})`;
+      const opacity = (star.z < FADE_START)
+        ? Math.max(star.z / FADE_START, 0)
+        : 1;
+      // Use translate3d to trigger GPU acceleration
+      star.el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${size})`; 
       star.el.style.opacity = opacity;
     }
     requestAnimationFrame(animate);

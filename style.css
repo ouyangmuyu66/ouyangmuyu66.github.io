@@ -381,6 +381,7 @@ h1 span.typing {
 
 #star-field .star {
   position: absolute;
+  will-change: transform, opacity; /* hint GPU compositing */
   width: var(--star-dimension);
   height: var(--star-dimension);
   z-index: 1;
@@ -403,7 +404,7 @@ h1 span.typing {
   inset: -1px;              /* glow size */
   background: #ffffff;
   border-radius: 100%;
-  opacity: 0.20;
+  opacity: 0.69;
   filter: blur(2px);        /* only glow is blurred */
   z-index: 1;
 }
