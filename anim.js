@@ -1,13 +1,15 @@
-// anim.js (replace entire file)
 (function () {
-  // -------------------------- Typing animation (quote-right exactly like original, gif reveal restored) --------------------------
-  function prepareTypingElement(el) {
-    if (el.dataset.prepared === "true") return;
-    el.dataset.prepared = "true";
 
-    el.style.visibility = "hidden";
+  function typeElement(el, speed, done, cursorSpeed = 0.5) { 
+    // cursorSpeed = multiplier of typing speed, e.g., 0.5 = cursor moves faster
+    el.style.visibility = "visible";
+
     const children = Array.from(el.childNodes);
+    const letters = [];
     el.textContent = "";
+
+    const quoteRight = el.parentElement.querySelector('.quote-right');
+    if (quoteRight) quoteRight.style.opacity = 1;
 
     children.forEach(node => {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -17,114 +19,78 @@
           span.textContent = text[i];
           span.style.opacity = 0;
           el.appendChild(span);
+          letters.push(span);
         }
       } else {
-        // Keep non-text nodes, but hide delayed gifs until the paragraph finishes
         if (node.tagName === 'IMG' && node.classList.contains('delayed')) {
           node.style.visibility = 'hidden';
         }
         el.appendChild(node);
       }
     });
-  }
 
-  function playTypingForElement(el, speed, onComplete) {
-    prepareTypingElement(el);
-    el.style.visibility = "visible";
+    for (let i = 0; i < letters.length; i++) {
+      (function(index) {
+        setTimeout(function() {
+          letters[index].style.opacity = 1;
 
-    const spans = Array.from(el.querySelectorAll('span'));
-    if (spans.length === 0) {
-      // reveal delayed gif if present and finish immediately
-      const gifFallback = el.querySelector('img.delayed');
-      if (gifFallback) gifFallback.style.visibility = "visible";
-      if (onComplete) onComplete();
-      return;
-    }
-
-    const quoteRight = el.parentElement ? el.parentElement.querySelector('.quote-right') : null;
-    if (quoteRight) {
-      quoteRight.style.opacity = 1;
-      // small transition for per-letter snap (keeps original snapping feel)
-      quoteRight.style.transition = 'transform 0.05s linear';
-    }
-
-    let index = 0;
-    let lastTime = performance.now();
-    let acc = 0;
-    const perChar = Math.max(10, speed);
-
-    function step(now) {
-      const dt = now - lastTime;
-      lastTime = now;
-      acc += dt;
-
-      while (acc >= perChar && index < spans.length) {
-        const s = spans[index];
-        s.style.opacity = 1;
-
-        if (quoteRight) {
-          try {
-            // per-letter positioning (as in your original behavior)
-            const rect = s.getBoundingClientRect();
-            const parentRect = el.parentElement.getBoundingClientRect();
-            const x = rect.right - parentRect.left;
-            const y = rect.top - parentRect.top;
-            quoteRight.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-          } catch (e) {
-            // ignore any DOM reading errors
+          if (quoteRight) {
+            const letterRect = letters[index].getBoundingClientRect();
+            const containerRect = el.parentElement.getBoundingClientRect();
+            // animate cursor separately, faster than typing
+            quoteRight.style.transition = `left ${speed * cursorSpeed}ms linear, top ${speed * cursorSpeed}ms linear`;
+            quoteRight.style.left = (letterRect.right - containerRect.left) + 'px';
+            quoteRight.style.top  = (letterRect.top - containerRect.top) + 'px';
           }
-        }
 
-        index++;
-        acc -= perChar;
-      }
+          if (index === letters.length - 1) {
+            const gif = el.querySelector('img.delayed');
+            if (gif) gif.style.visibility = "visible";
 
-      if (index >= spans.length) {
-        // reveal delayed gif exactly like your original code
-        const gif = el.querySelector('img.delayed');
-        if (gif) gif.style.visibility = "visible";
+            if (quoteRight) {
+              const container = el.parentElement;
+              const containerRect = container.getBoundingClientRect();
+              let finalLeft = containerRect.width;
+              
 
-        // final position snap to the end of the element (exact style as original)
-        if (quoteRight) {
-          try {
-            const elRect = el.getBoundingClientRect();
-            const parentRect = el.parentElement.getBoundingClientRect();
-            const finalX = elRect.right - parentRect.left;
-            const finalY = elRect.top - parentRect.top;
-            quoteRight.style.transform = `translate(${Math.round(finalX)}px, ${Math.round(finalY)}px)`;
-          } catch (e) {
-            // ignore
+              const offsetX = -0; // adjust manually
+                    // Apply your manual tweaks
+              finalLeft += offsetX; // negative moves left, positive moves right
+             
+
+              quoteRight.style.transition = 'left 0.2s ease-out, top 0.2s ease-out';
+              quoteRight.style.left = finalLeft + 'px';
+              
+            }
+
+            if (done) setTimeout(done, speed);
           }
-        }
-
-        if (onComplete) setTimeout(onComplete, 50);
-        return;
-      }
-
-      requestAnimationFrame(step);
+        }, index * speed);
+      })(i);
     }
-
-    requestAnimationFrame(step);
   }
 
   function playGroup(group) {
     if (group.dataset.played === "true") return;
     group.dataset.played = "true";
 
-    const items = Array.from(group.querySelectorAll(".typing"));
-    let idx = 0;
+    const items = group.querySelectorAll(".typing");
+    let index = 0;
 
-    function next() {
-      if (idx >= items.length) return;
-      const el = items[idx];
-      const speed = parseInt(el.getAttribute("data-speed"), 10) || 60;
-      playTypingForElement(el, speed, () => {
-        idx++;
-        next();
-      });
+    function playNext() {
+      if (index >= items.length) return;
+
+      const el = items[index];
+      const speed = parseInt(el.getAttribute("data-speed"), 20) || 60;
+      const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.0;
+
+      typeElement(el, speed, function() {
+        index++;
+        playNext();
+      }, cursorSpeed);
     }
 
-    next();
+    playNext();
   }
 
   function observeGroups() {
@@ -137,147 +103,104 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.25 });
+    }, { threshold: 0.5 });
 
     groups.forEach(group => observer.observe(group));
   }
 
   document.addEventListener("DOMContentLoaded", observeGroups);
 
-  // -------------------------- Canvas starfield w/ glow --------------------------
-  (function () {
-    const canvas = document.getElementById('star-field');
-    if (!canvas) return;
+})();
 
-    const ctx = canvas.getContext('2d', { alpha: true });
-    let w = 0, h = 0, cx = 0, cy = 0;
-    const DEPTH = 8;
-    const BASE_SPEED = 0.0028;
-    const STAR_COUNT = 80;
-    const BASE_SIZE = 2.2;
-    let stars = [];
 
-    function resize() {
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      w = canvas.clientWidth = window.innerWidth;
-      h = canvas.clientHeight = window.innerHeight;
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      cx = w * 0.62;
-      cy = h * 0.5;
-      initStars();
-      drawBackground();
-    }
 
-    function initStars() {
-      stars = [];
-      for (let i = 0; i < STAR_COUNT; i++) {
-        stars.push({
-          x: (Math.random() - 0.5) * w,
-          y: (Math.random() - 0.5) * h,
-          z: Math.random() * DEPTH + 0.5,
-          color: Math.random()
-        });
+// -------------------- Star field (unchanged) -------------------------------
+(function () {
+
+  const STAR_COUNT = 120; // number of stars
+  const SPEED = 0.03;   // forward movement speed
+  const DEPTH = 8;        // depth of field
+  const BASE_SIZE = 3;
+  const FADE_START = 2;
+
+  const field = document.getElementById('star-field');
+  if (!field) return;
+
+  const stars = [];
+  let w, h, vpX, vpY;
+
+  function resize() {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    vpX = w * 0.62;
+    vpY = h * 0.5;
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  function createStar() {
+    const el = document.createElement('div');
+    el.className = 'star';
+    field.appendChild(el);
+
+    return {
+      el,
+      x: (Math.random() - 0.5) * w,
+      y: (Math.random() - 0.5) * h,
+      z: Math.random() * DEPTH + 0.5
+    };
+  }
+
+  function resetStar(star) {
+    star.x = (Math.random() - 0.5) * w;
+    star.y = (Math.random() - 0.5) * h;
+    star.z = DEPTH;
+  }
+
+  for (let i = 0; i < STAR_COUNT; i++) stars.push(createStar());
+
+  function animate() {
+    for (const star of stars) {
+      star.z -= SPEED;
+      if (star.z <= 0.15) {
+        resetStar(star);
+        continue;
       }
+      const scale = 1 / star.z;
+      const x = vpX + star.x * scale;
+      const y = vpY + star.y * scale;
+      const size = BASE_SIZE * scale;
+      const opacity = star.z < FADE_START ? Math.max(star.z / FADE_START, 0) : 1;
+      star.el.style.transform = `translate(${x}px, ${y}px) scale(${size})`;
+      star.el.style.opacity = opacity;
     }
-
-    function resetStar(s) {
-      s.x = (Math.random() - 0.5) * w;
-      s.y = (Math.random() - 0.5) * h;
-      s.z = DEPTH;
-      s.color = Math.random();
-    }
-
-    function drawBackground() {
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, '#030614');
-      g.addColorStop(0.35, '#112049');
-      g.addColorStop(0.6, '#4c32a8');
-      g.addColorStop(1, '#ffdf89');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
-    }
-
-    let last = performance.now();
-    function animate(now) {
-      const dt = now - last;
-      last = now;
-
-      drawBackground();
-
-      for (let i = 0; i < stars.length; i++) {
-        const s = stars[i];
-        s.z -= BASE_SPEED * dt;
-        if (s.z <= 0.12) {
-          resetStar(s);
-          continue;
-        }
-        const scale = 1 / s.z;
-        const x = cx + s.x * scale;
-        const y = cy + s.y * scale;
-        const size = Math.max(0.5, BASE_SIZE * scale);
-        const alpha = s.z < 2 ? Math.max(s.z / 2, 0) : 1.0;
-
-        let base;
-        if (s.color < 0.25) base = '255,255,255';
-        else if (s.color < 0.6) base = '191,187,64';
-        else if (s.color < 0.8) base = '68,68,255';
-        else base = '255,68,68';
-
-        const glowRadius = size * 6;
-        const rg = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-        rg.addColorStop(0, `rgba(${base}, ${alpha * 0.9})`);
-        rg.addColorStop(0.3, `rgba(${base}, ${alpha * 0.45})`);
-        rg.addColorStop(1, `rgba(${base}, 0)`);
-
-        ctx.beginPath();
-        ctx.fillStyle = rg;
-        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(${base}, ${Math.min(1, alpha + 0.2)})`;
-        ctx.arc(x, y, Math.max(0.6, size * 0.55), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      requestAnimationFrame(animate);
-    }
-
-    function debounce(fn, ms) {
-      let t;
-      return function () {
-        clearTimeout(t);
-        t = setTimeout(() => fn(), ms);
-      };
-    }
-
-    window.addEventListener('resize', debounce(resize, 120));
-    resize();
-    initStars();
     requestAnimationFrame(animate);
-  })();
+  }
 
-  // -------------------- Scroll button ------------------------------
-  document.addEventListener("DOMContentLoaded", () => {
-    const buttons = document.querySelectorAll('.scroll-button');
+  animate();
 
-    buttons.forEach(button => {
-      const section = button.closest('section');
-      if (!section) return;
+})();
 
-      if (!section.nextElementSibling) {
-        button.style.display = 'none';
-        return;
-      }
 
-      section.style.position = section.style.position || 'relative';
+// -------------------- Scroll button behaviour ------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const buttons = document.querySelectorAll('.scroll-button');
 
-      button.addEventListener('click', () => {
-        const next = section.nextElementSibling;
-        if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, { passive: true });
+  buttons.forEach(button => {
+    const section = button.closest('section');
+    if (!section) return;
+
+    if (!section.nextElementSibling) {
+      button.style.display = 'none';
+      return;
+    }
+
+    section.style.position = section.style.position || 'relative';
+
+    button.addEventListener('click', () => {
+      const next = section.nextElementSibling;
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
-})();
+});
