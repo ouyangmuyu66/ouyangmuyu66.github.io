@@ -53,7 +53,7 @@
               let finalLeft = containerRect.width;
               
 
-              const offsetX = -0; // adjust manually
+              const offsetX = -20; // adjust manually
                     // Apply your manual tweaks
               finalLeft += offsetX; // negative moves left, positive moves right
              
