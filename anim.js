@@ -54,10 +54,10 @@
               
 
               // Proportional left shift based on container width
-              let leftShift = containerRect.width * 0.01; // move 5% of container width to left by default
+              let leftShift = containerRect.width * 0.02; // move 5% of container width to left by default
 
               // Optional: increase shift on very small screens
-              if (window.innerWidth < 1300) leftShift = containerRect.width * 0.05; //bigger move to left
+              if (window.innerWidth < 1300) leftShift = containerRect.width * 0.07; //bigger move to left
 
               finalLeft -= leftShift; // subtract to move left
              
