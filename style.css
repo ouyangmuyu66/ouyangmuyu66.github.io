@@ -56,7 +56,7 @@ body {
   position: absolute; /* position relative to .container */
   top: -10px;             /* stick to top */
   /* left: clamp(-120px,-10vw,-150px);         stick to left */
-  left: clamp(-120px,-100px,-97px);    
+  left: clamp(-60px,-100px,-97px);    
   /* optional styling */
   font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
   line-height: 1;
