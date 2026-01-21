@@ -1,0 +1,2231 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* NOT scroll */
+  /* height: 100%; */
+  /* scroll-behavior: smooth; */
+  
+}
+
+@font-face {
+  font-family: 'memo';
+  src: url(fonts/MFSuHei-Noncommercial-Regular-2.ttf);
+}
+
+@font-face {
+  font-family: 'thin';
+  src: url(fonts/KeHeiTi-2.ttf);
+}
+
+@font-face {
+  font-family: 'norm';
+  src: url(fonts/SourceHanSansSC-Normal-2.otf);
+}
+
+
+
+@media (max-width: 1366px) {
+  .chat_container {
+    height: 30vw;
+    width: 40vh;
+    background: linear-gradient(to bottom right,rgba(255, 0, 0, 0.1),rgba(218, 75, 218, 0.3));
+  
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 29px;
+    border: 4px solid rgba(24, 8, 167, 0.22);
+    box-shadow:
+      inset 0 1px 1px rgba(208, 166, 221, 0.25),
+      0 8px 24px rgba(20, 1, 46, 0.25);
+    padding: 16px;
+    padding-top: 50px;
+    backdrop-filter: blur(5px);
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+  }
+}
+
+@media (max-width: 600px) {
+  .chat_container {
+    height: 60vh;
+    width: 30vh;
+    background: linear-gradient(to bottom right,rgba(111, 0, 255, 0.1),rgba(218, 75, 218, 0.3));
+ 
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: 29px;
+    border: 4px solid rgba(24, 8, 167, 0.22);
+    box-shadow:
+      inset 0 1px 1px rgba(247, 220, 255, 0.25),
+      0 8px 24px rgba(20, 1, 46, 0.25);
+    padding: 16px;
+    padding-top: 50px;
+
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+  }
+}
+
+
+  .message-row {
+    display: flex;
+    align-items: flex-start; /* aligns avatar & bubble along their top baseline */
+    margin-bottom: 12px;
+  }
+
+  /* Left messages */
+  .message-row.left {
+    justify-content: flex-start;
+  }
+
+  /* Right messages */
+  .message-row.right {
+    justify-content: flex-end;
+  }
+  .message-row.left .avatar  { margin-right: 8px; }
+  .message-row.right .avatar { margin-left: 8px; }
+
+.avatar {
+  position: relative;      /* 关键：让子元素 absolute 以 avatar 为参照 */
+  width: 36px;
+  height: 36px;
+  cursor: pointer;         /* 点击效果 */
+}
+
+.avatar img {
+  position: absolute;
+  inset: 0;                /* top:0; left:0; bottom:0; right:0 */
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
+  transition: transform 0.25s cubic-bezier(.2,.8,.2,1),
+              opacity 0.2s ease;
+}
+
+/* 默认状态 */
+.avatar .avatar-base {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 1;
+}
+
+.avatar .avatar-focus {
+  opacity: 0;
+  transform: scale(0.8);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* focus 状态 */
+.avatar.is-focus .avatar-base {
+  opacity: 0;
+  transform: scale(3);
+}
+
+.avatar.is-focus .avatar-focus {
+  opacity: 1;
+  transform: scale(3);   /* 可以改成你想要的大小 */
+  pointer-events: auto;    /* gif 可以交互 */
+}
+
+
+.message-row.left  .avatar.is-focus .avatar-focus,
+.message-row.left  .avatar.is-focus .avatar-base{
+  transform: translate(-30px, -5px) scale(3);
+}
+
+.message-row.right .avatar.is-focus .avatar-focus,
+.message-row.right .avatar.is-focus .avatar-base{
+  transform: translate(30px, -5px) scale(3);
+}
+
+
+  .bubble {
+    
+    display: inline-block;      /* lets width follow content */
+    max-width: 72%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    box-sizing: border-box;     /* include padding in width calculations */
+  }
+
+  .left-bubble {
+    background: linear-gradient(
+      to bottom right,
+      rgba(0, 0, 0, 0.85),
+      rgba(77, 32, 73, 0.85)
+    );
+    margin-left: 8px;
+   
+  
+    color: #ffffff;
+    border-top-left-radius: 4px;
+    
+ ;
+  }
+
+  .right-bubble {
+    margin-right: 8px;
+    background: linear-gradient(
+      to bottom right,
+      rgba(116, 247, 160, 0.85),
+      rgba(75, 185, 218, 0.85)
+    );
+  
+    color: #000000;
+    border-top-right-radius: 4px;
+  }
+
+
+
+
+
+
+
+
+.typing img.delayed {
+  visibility: hidden;  /* hidden until JS triggers S*/
+  display: inline-block;
+  width: 2em;
+  height: auto;
+  vertical-align: middle;
+}
+
+body {
+  
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: transparent;
+  color: #000000;
+}
+
+.container {
+  position: relative;
+  width: clamp(300px, 35vw, 6100px);   /* scales with viewport */
+  padding: clamp(20px, 2vw, 60px);     /* inner spacing scales too */
+  margin: 0 auto;                       /* center horizontally */
+  display: flex;
+  flex-direction: column;
+  align-items: center;                  /* center inner content horizontally */
+  justify-content: center;              /* optional: center vertically if needed */
+  box-sizing: border-box;    
+  outline: 2px dashed rgb(212, 24, 24);           /* padding included in width */
+}
+
+/*
+lapo = 1280x800
+ipad pro = 1366x1024
+huawei mate pro 60 = 360x780
+*/
+
+
+@media (max-width: 1366px) {
+  .quote {
+      font-family: 'norm', sans-serif;
+      position: absolute; /* position relative to .container */
+      top: -10px;             /* stick to top */
+  
+      left: -120px;    
+    
+      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
+      line-height: 1;
+      color: #ffffff;  
+  }
+}
+
+
+@media (max-width: 1280px) {
+  .quote {
+      font-family: 'norm', sans-serif;
+      position: absolute; /* position relative to .container */
+      top: -10px;             /* stick to top */
+  
+      left: -100px;    
+    
+      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
+      line-height: 1;
+      color: #ffffff;  
+  }
+}
+
+@media (max-width: 600px) {
+  .quote {
+      font-family: 'norm', sans-serif;
+      position: absolute; /* position relative to .container */
+      top: -10px;             /* stick to top */
+  
+      left: -60px;    
+    
+      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
+      line-height: 1;
+      color: #000000;  
+  }
+}
+
+
+
+
+
+
+.quote-right {
+  font-family: 'norm', sans-serif;
+  transition: none;
+  position: absolute; /* position relative to .container */
+  right: 0;            /* stick to right edge of text container */
+  top: 0;
+
+  line-height: 1;
+  opacity: 0;          /* hide initially */
+  transition: opacity 0.05s ease;
+  font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */ 
+}
+
+
+.text_container {
+  position: relative;
+  width: 100%;                     /* take full width of container */
+  max-width: 750px;                /* optional limit for readability */
+  text-align: left;                /* or center if desired */
+  padding: clamp(10px, 2vw, 35px); /* inner padding */
+  padding-left: 3vw;
+  box-sizing: border-box;
+  outline: 2px dashed rgb(24, 212, 134);          /* include padding in width */
+}
+
+.title {
+
+  font-size: clamp(40px, 3vw, 80px);
+  font-weight: normal;
+  text-align: center;
+  background: linear-gradient(to bottom right,rgb(173, 116, 247),rgb(75, 132, 218));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+.h1 {
+  font-family: 'memo', sans-serif;
+  
+  font-size: clamp(10px,6vw,80px);
+  color: #ffffff;
+  font-weight: normal;
+  text-align: center;
+}
+
+.p {
+  font-family: 'memo', sans-serif;
+
+  font-size: clamp(16px, 1.1vw, 20px);
+  color: #ffffff;
+  font-weight: normal;
+  text-align: center;
+}
+
+.typing img.emoji {
+  width: 1.8em;
+  height: 1.8em;
+  vertical-align: -0.55em; /* fine-tune baseline */
+  display: inline-block;
+}
+
+section p {
+  margin: 0;          /* remove default browser margin */
+  font-family: 'norm', sans-serif;  
+}
+section p + p {
+  margin-top: 0.01em; /* space between paragraphs */
+}
+
+
+section {
+  width: 100%;
+  flex-direction: column; 
+  box-sizing: border-box;
+ 
+  outline: 2px dashed red;
+  gap: 0.01em;  
+  display: flex;  
+  align-items: center;      /* vertical center */
+  justify-content: center;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card {
+  background: #1c1c22;
+  margin: 40px 0;
+  padding: 30px;
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.card_date {
+  color: #8ef7ff85;
+}
+
+
+.card_text {
+  color: #ffffff9d;
+}
+
+.thin {
+  font-family: 'thin', sans-serif;
+}
+
+.zaozi {
+  font-family: 'zaozi', sans-serif;
+}
+
+
+#passwordInput::placeholder {
+  color: rgba(0, 0, 0, 0.349);      /* change this to any color you like */
+  opacity: 1;       /* ensures the color is fully applied in some browsers */
+}
+
+.login_title {
+  font-family: 'memo', sans-serif;
+
+  margin-bottom: 3vh;
+
+  font-size: clamp(25px, 1vh, 30px);
+  color: #ffffff;
+  font-weight: normal;
+  text-align: center;
+}
+
+@media (max-width: 1366px) {
+  .login_title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .login_title {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 600px) {
+  .login_title {
+    font-size: 25px;
+  }
+}
+
+
+h1 span.typing {
+  display: inline-block;
+  margin: 0;
+}
+
+#lockScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex; 
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center; 
+  
+}
+
+
+
+#lockScreen input {
+  width: clamp(200px, 40vw, 250px);
+  height: clamp(45px, 5vh, 100px);
+
+  padding-left: clamp(10px, 2.1vh, 30px);
+  font-size: clamp(15px, 1vh, 20px);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 40vh;
+
+  color: #ffffff;
+  caret-color: #ff69b4;
+
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.25),
+    0 8px 24px rgba(0,0,0,0.25);
+
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
+}
+
+@media (max-width: 1280px) {
+  #lockScreen input {
+    width: clamp(100px, 15vw, 280px);
+    height: 30px;
+  }
+}
+
+@media (max-width: 600px) {
+  #lockScreen input {
+    width: clamp(100px, 10vw, 180px);
+  }
+}
+
+
+/* Remove reliance on :active for this button */
+#lockScreen button {
+  width: clamp(80px, 12vw, 200px);
+  height: clamp(45px, 5vh, 90px);
+  margin-top: -3vh;
+  font-size: clamp(15px, 1vh, 20px);
+  color: #ffffff;
+  background-color: #ff69b4;
+  border: none;
+  border-radius: 40vh;
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 rgba(255, 255, 255, 0);
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.5s ease;
+}
+
+@media (max-width: 1366px) {
+  #lockScreen button {
+    width: 100px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 1280px) {
+  #lockScreen button {
+    width: 100px;
+    height: 30px;
+    
+  }
+}
+
+@media (max-width: 600px) {
+  #lockScreen button {
+    width: 100px;
+  }
+}
+
+
+
+
+/* pressed state */
+#lockScreen button.pressed {
+  background-color: #421a2f; /* darker shade */
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35),
+              inset 0 2px 4px rgba(0,0,0,0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.3s ease;
+}
+
+/* optional: hover effect for desktop */
+#lockScreen button:hover:not(.pressed) {
+  background-color: #b3437b;
+  transform: translateY(-1px);
+}
+
+#lockScreen button.loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.loading {
+  position: fixed;
+  inset: 0;                 /* top:0 right:0 bottom:0 left:0 */
+  display: flex;
+  align-items: center;      /* vertical center */
+  justify-content: center;  /* horizontal center */
+  z-index: 999;
+}
+
+.loading svg polyline {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.loading svg polyline#back {
+  stroke: #ff4d5033;
+}
+
+.loading svg polyline#front {
+  stroke: #ff4d4f;
+  stroke-dasharray: 48, 144;
+  stroke-dashoffset: 192;
+  animation: dash_682 1.4s linear infinite;
+}
+
+@keyframes dash_682 {
+  72.5% {
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* hover (desktop) */
+#lockScreen button:hover {
+  background-color: #ff7cc0;
+  transform: translateY(-1px);
+}
+
+/* pressed */
+#lockScreen button:active {
+  background-color: #e85aa3;
+  transform: translateY(2px) scale(0.98);
+
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+
+.customFont {
+  font-family: sans-serif, sans-serif; /* your custom font */
+  font-weight: normal; /* optional */
+  /* you can also add color or size if you want */
+  color: #313131; /* optional: make it stand out */
+}
+
+.typing { 
+  visibility: hidden; /*hide all text before type anim starts*/
+}
+
+:root {
+  --star-dimension: 2px;
+}
+
+#star-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+#star-field::before{
+  content:"";
+  position:absolute;
+  inset:-80px;              /* 避免边缘光晕断层 */
+  pointer-events:none;
+  z-index:0;
+
+  /* 关键：用混合模式叠出“雾化星云” */
+  background:
+    /* 1) 暗角：把边缘压暗，中心更像在“穿越” */
+    radial-gradient(120% 120% at 50% 50%,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.25) 45%,
+      rgba(0,0,0,0.65) 78%,
+      rgba(0,0,0,0.92) 100%
+    ),
+
+    /* 2) 中央“隧道体积光”（偏冷色） */
+    radial-gradient(55% 85% at 50% 52%,
+      rgba(160, 210, 255, 0.10) 0%,
+      rgba(120, 170, 255, 0.08) 18%,
+      rgba(70, 90, 210, 0.06) 36%,
+      rgba(0, 0, 0, 0.00) 62%
+    ),
+
+    /* 3) 左上星云（紫） */
+    radial-gradient(80% 70% at 22% 18%,
+      rgba(180, 110, 255, 0.18) 0%,
+      rgba(120, 60, 220, 0.10) 30%,
+      rgba(0, 0, 0, 0.00) 70%
+    ),
+
+    /* 4) 右上星云（青蓝） */
+    radial-gradient(90% 75% at 78% 22%,
+      rgba(90, 230, 255, 0.16) 0%,
+      rgba(40, 140, 255, 0.08) 34%,
+      rgba(0, 0, 0, 0.00) 72%
+    ),
+
+    /* 5) 下方星云（玫紫/粉） */
+    radial-gradient(110% 90% at 50% 88%,
+      rgba(255, 120, 210, 0.14) 0%,
+      rgba(180, 70, 190, 0.08) 35%,
+      rgba(0, 0, 0, 0.00) 75%
+    ),
+
+    /* 6) 基底深空：上下有轻微色温变化，避免死黑 */
+    linear-gradient(to bottom,
+      #04040a 0%,
+      #02030a 35%,
+      #010108 70%,
+      #000000 100%
+    );
+
+  filter: saturate(1.25) contrast(1.08);
+}
+
+
+#star-field .star {
+  position: absolute;
+  will-change: transform, opacity; /* hint GPU compositing */
+  width: var(--star-dimension);
+  height: var(--star-dimension);
+  z-index: 1;
+  color: #fff;
+}
+
+/* SOLID CORE (hard edge) */
+#star-field .star::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* GLOW (soft, blurred halo) */
+#star-field .star::after {
+  content: '';
+  position: absolute;
+  inset: -1px;              /* glow size */
+  background: currentColor;
+  border-radius: 100%;
+  opacity: 1;
+  filter: blur(3px);        /* only glow is blurred */
+  z-index: 1;
+}
+
+#star-field .star.white::after  { background:#ffffff; }
+#star-field .star.yellow::after { background:#FFD84D; }
+#star-field .star.blue::after   { background:#6FA8FF; }
+#star-field .star.red::after    { background:#FF6A6A; }
+
+#star-field .star.yellow::after {
+  background: #FFD84D;
+  box-shadow:
+    0 0 6px rgba(255,216,77,0.9),
+    0 0 12px rgba(255,216,77,0.6),
+    0 0 20px rgba(255,216,77,0.4);
+}
+
+#star-field .star.blue::after {
+  background:#6FA8FF;
+  box-shadow:
+    0 0 6px rgba(111,168,255,0.9),
+    0 0 14px rgba(111,168,255,0.6);
+}
+
+#star-field .star.far {
+  width: calc(var(--star-dimension) - 1px);
+  height: calc(var(--star-dimension) - 1px);
+}
+
+#star-field .star.near {
+  width: calc(var(--star-dimension) + 2px);
+  height: calc(var(--star-dimension) + 2px);
+}
+
+#star-field .star.white    { background: #fff;  box-shadow: 0 0 10px #fff; }
+#star-field .star.yellow   { background: #BFBB40; box-shadow: 0 0 10px #BFBB40; }
+#star-field .star.blue     { background: #4444ff; box-shadow: 0 0 10px #4444ff; }
+#star-field .star.red      { background: #ff4444; box-shadow: 0 0 10px #ff4444; }
+
+:root {
+  --scroll-btn-size: clamp(48px, 8vh, 96px);
+}
+/* Scroll button style */
+.scroll-button {
+    right: 0%;
+    width: clamp(20px,6vh,110px);
+    height: clamp(120px,25vh,300px);
+    font-size: clamp(7px, 2.5vh, 30px);
+   
+
+    bottom: 200px; /* bottom of section */
+    text-align: center;
+
+    border-top-left-radius: 60px;   /* half of height for perfect curve */
+    border-bottom-left-radius: 60px;  
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    gap: 2px;
+
+    position: absolute;
+
+    background-color: rgba(0, 0, 0, 0.5); /* black with 50% transparency */
+    color: white;
+    border: none;
+  
+    cursor: pointer;
+    
+    
+    transition: transform 0.1s, background-color 0.1s; /* button animation */
+}
+
+/* Button press effect */
+.scroll-button:active {
+    transform: scale(0.95);
+    background-color: rgb(0, 0, 0);
+}
+
+.scroll-button, #lockScreen button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent; /* removes tap highlight */
+  touch-action: manipulation; /* ensures tap is recognized */
+}
+
+#arrow {
+  margin-left: clamp(-30px,0.15vh,5px); /* move slightly to the right */
+  display: inline-block; /* ensures margin works without breaking layout */
+}
+
+
+/* From Uiverse.io by vinodjangid07 */ 
+/* The switch - the box around the speaker*/
+.toggleSwitch {
+  width: 50px;
+  height: 50px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(39, 39, 39);
+  border-radius: 50%;
+  cursor: pointer;
+  transition-duration: .3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.13);
+  overflow: hidden;
+}
+
+/* Hide default HTML checkbox */
+#checkboxInput {
+  display: none;
+}
+
+.bell {
+  width: 18px;
+}
+
+.bell path {
+  fill: white;
+}
+
+.speaker {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition-duration: .3s;
+}
+
+.speaker svg {
+  width: 18px;
+  transform: translateX(-1px);
+}
+
+
+
+.mute-speaker {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  z-index: 3;
+  transition-duration: .3s;
+}
+
+.mute-speaker svg {
+  width: 18px;
+  transform: translateX(-1px);
+}
+
+
+#checkboxInput:checked +.toggleSwitch .speaker {
+  opacity: 0;
+  transition-duration: .3s;
+}
+
+#checkboxInput:checked +.toggleSwitch .mute-speaker {
+  opacity: 1;
+  transition-duration: .3s;
+}
+
+#checkboxInput:active + .toggleSwitch {
+  transform: scale(0.7);
+}
+
+#checkboxInput:hover + .toggleSwitch {
+  background-color: rgb(0, 0, 0);
+}
+.bgm-toggle { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+
+
+
+
+
+/* THINKING BUBBLE */
+
+.avatar { position: relative; }
+
+/* Anchor thinking bubble to avatar bottom */
+.thinking-bubble{
+  position: absolute;
+  width: 260px;
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end; /* IMPORTANT: bubble aligns to bottom */
+  gap: 8px;
+  z-index: 8;
+
+  bottom: 0;  /* anchor point = bottom of avatar */
+  top: auto;  /* make sure top is NOT used */
+}
+
+/* LEFT bubble */
+.thinking-bubble.side-left{
+  right: 100%;
+  top: 0;
+  transform: translate(-20px, 6px);
+}
+
+/* RIGHT bubble */
+.thinking-bubble.side-right{
+  left: 100%;
+  top: 0;
+  transform: translate(20px, 6px);
+}
+
+/* dots base: anchored to the bubble container */
+.thinking-bubble .dots{
+  position: absolute;
+  display: flex;
+  gap: 4px;
+
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* LEFT bubble: dots sit on the right edge (inside bubble) */
+.thinking-bubble.side-left .dots{
+  right: -44px;
+}
+
+/* RIGHT bubble: dots sit on the left side (outside bubble) */
+.thinking-bubble.side-right .dots{
+  left: -44px;
+}
+
+.thinking-bubble .dot{
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.85);
+  opacity: 0;
+}
+
+
+/* responsive */
+@media (max-width: 1280px){
+  .thinking-bubble{ width: 220px; }
+  .thinking-bubble.side-left  { transform: translate(-138px, -16px); } /*x,y*/
+  .thinking-bubble.side-right { transform: translate(138px, -16px); }
+}
+
+
+
+
+
+/* the slightly higher dot (d2) is positioned by animation */
+.thinking-bubble .dot.d2 { transform-origin: center bottom; }
+
+/* main bubble (cloud) */
+.thinking-bubble .main-bubble{
+  display:inline-block;
+  text-align: left;
+  max-width: 68vw; /* mobile safe */
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.25;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.thinking-bubble .main-bubble img.think-emoji{
+  position: static;      /* make sure it stays inline */
+  width: 1.6em;
+  height: 1.6em;
+  display: inline-block;
+  vertical-align: -0.35em;
+  margin: 0 0.15em;      /* optional: breathing room */
+}
+
+/* when bubble on left side (mirror triangle) */
+.thinking-bubble.side-left .main-bubble::after { left: auto; right: -6px; }
+
+/* Animation keyframes (dots) */
+@keyframes dot-fade-up {
+  0%   { opacity: 0; transform: translateY(0); }
+  30%  { opacity: 1; transform: translateY(-6px); }
+  100% { opacity: 0.35; transform: translateY(0); }
+}
+
+/* main bubble fade+pop */
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* active state toggled by JS */
+.thinking-bubble.active { opacity: 1; pointer-events: auto; }
+
+/* when active, we animate dots with stagger */
+.thinking-bubble.active .dot.d1 {
+  animation: dot-fade-up 550ms ease forwards;
+  animation-delay: 0ms;
+}
+.thinking-bubble.active .dot.d2 {
+  animation: dot-fade-up 550ms ease forwards;
+  animation-delay: 170ms; /* slightly later and visually higher */
+}
+.thinking-bubble.active .dot.d3 {
+  animation: dot-fade-up 550ms ease forwards;
+  animation-delay: 340ms;
+}
+
+/* show main bubble after dots */
+.thinking-bubble.active .main-bubble {
+  animation: bubble-in 360ms cubic-bezier(.2,.9,.3,1) forwards;
+  animation-delay: 560ms; /* begins after dots animate */
+}
+
+/* hide instantly if reduced motion is preferred */
+@media (prefers-reduced-motion: reduce) {
+  .thinking-bubble .dot,
+  .thinking-bubble .main-bubble {
+    animation: none !important;
+    transition: none !important;
+  }
+  .thinking-bubble { opacity: 1 !important; }
+}
+
+/* ensure avatar container is positioned relative */
+.avatar { position: relative; }
+
+/* small tweaks: ensure main-bubble doesn't overflow screen to the right */
+@media (max-width: 600px) {
+  .thinking-bubble .main-bubble { max-width: calc(100vw - 140px); }
+}
+
+
+#lockScreen.error #errorText {
+  color: #fff !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* keep your bubble above the focused row */
+
+#focus-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: opacity .2s ease;
+}
+.thinking-bubble {
+  position: absolute;
+  z-index: 2;
+}
+.avatar.is-focus {
+  position: relative;
+  z-index: 9150; /* higher than blur overlay */
+}
+
+body.focus-mode #focus-overlay{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* top layer that sits above overlay */
+#focus-top{
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  pointer-events: none; /* so overlay still catches clicks */
+}
+
+/* keep the whole focus-top non-interactive by default */
+#focus-top { pointer-events: none; }
+
+/* ONLY the focused avatar can receive clicks */
+body.focus-mode #focus-top .avatar.is-focus {
+  pointer-events: auto;
+}
+
+/* if your thinking bubble needs clicks/hover too */
+body.focus-mode #focus-top .avatar.is-focus .thinking-bubble{
+  pointer-events: auto;
+}
+#focus-top .thinking-bubble{ z-index: 5; }
+
+/*Chart_1___________________________________________________________________________*/
+
+/* Chart_1 --------------------------------------------------- */
+
+#section3{
+  position: relative;
+  z-index: 5;
+  isolation: isolate;
+}
+#section3 .h1{
+  position: relative;
+  z-index: 10;        /* above chart */
+  pointer-events: none; /* optional, prevents blocking hover */
+  font-size: 40px;
+}
+
+/* chart fills the section */
+.chart-wrap{
+  position: absolute;
+  inset: 0;
+  z-index: 1;         /* chart layer */
+}
+
+/* IMPORTANT: allow interactions */
+#msgChart,
+#msgChart canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;  /* ✅ allow hover/click */
+}
+
+/* keep button above chart */
+#section3 .scroll-button{
+  position: absolute;
+  right: 0;
+  bottom: 200px;
+  z-index: 10;          /* ✅ above chart canvas */
+  pointer-events: auto;
+}
+#star-field{ pointer-events:none; }
+
+
+#section3 .container{
+  position: absolute;
+  top: 8vh;          /* adjust for chart_1 loc , larger to the bottom*/
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  margin: 0;
+  pointer-events: none;
+}
+
+#section3 .thin {
+  font-family: 'thin';
+  color: #fff;
+  font-size: 20px;
+  margin-top: 0.1vw;
+  display: block;      
+}
+
+
+/* #section3 .container .typing{
+  visibility: visible !important;
+} */
+/* Chart_2 --------------------------------------------------- */
+
+
+
+/* IMPORTANT: allow interactions */
+
+
+
+#section4 { position: relative; }
+
+#section4 .chart2-wrap{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: auto; /* 图表要能 hover */
+}
+
+#msgChart2, #msgChart2 canvas{
+  width: 100%;
+  height: 100%;
+}
+
+#section4 .chart-axis-label{
+  position: absolute;
+  top: 26%;
+  left: 21.5%;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+  color: #fff;
+  font-family: 'memo', sans-serif;
+  font-size: 18px;
+  opacity: 0.85;
+}
+
+
+
+#section4 h1{
+  position: relative;
+  z-index: 10;        /* above chart */
+  pointer-events: none; /* optional, prevents blocking hover */
+}
+
+
+
+/* keep button above chart */
+#section4 .scroll-button{
+  position: absolute;
+  right: 0;
+  bottom: 200px;
+  z-index: 10;          /* ✅ above chart canvas */
+  pointer-events: auto;
+}
+#star-field{ pointer-events:none; }
+
+
+#section4 .container{
+  position: absolute;
+  top: 8vh;          /* adjust for chart_1 loc , larger to the bottom*/
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  margin: 0;
+  pointer-events: none;
+}
+
+#section4 .thin {
+  font-family: 'thin';
+  color: #fff;
+  font-size: 20px;
+  margin-top: 0.1vw;
+  display: block;      
+}
+
+#section4 .h1 {
+  font-size: 40px;
+}
+
+
+
+/*fireworks*/
+/* ---------------- section5 fireworks + video (isolated) ---------------- */
+
+#section5{
+  position: relative;
+  overflow: hidden;
+}
+
+/* 舞台：占满整个 section5 */
+#section5 .s5-stage{
+  position: absolute;
+  inset: 0;
+  z-index: 0;             /* 背景层 */
+  pointer-events: none;   /* 不挡按钮/交互 */
+}
+
+
+
+/* 背景视频铺满 */
+/* background video */
+#section5 .s5-bgvideo{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  object-position: center center; /* ✅ 关键 */
+}
+
+/* 烟花 canvas 覆盖在视频上面 */
+#section5 .s5-fireworks{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* 确保你的 scroll-button 在最上层可点 */
+#section5 .scroll-button{
+  position: absolute;
+  right: 0;
+  bottom: 200px;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* section5 layout */
+#section5.fireworks-section{
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+/*firfir*/
+/* ===================== SAFE SCOPED FIREWORK UI (ONLY SECTION 5) ===================== */
+/* IMPORTANT:
+   - Removed global * selector and html/body rules (they clash with your site)
+   - Everything is scoped under #section5
+*/
+
+/* Use a dedicated wrapper if you have one; otherwise #section5 is fine */
+#section5 .fw-hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#section5 .fw-remove {
+  display: none !important;
+}
+
+#section5 .fw-blur {
+  filter: blur(12px);
+}
+
+/* If you still need a container layout INSIDE section5 */
+#section5 .fw-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* loading */
+#section5 .fw-loading-init {
+  width: 100%;
+  align-self: center;
+  text-align: center;
+  text-transform: uppercase;
+}
+#section5 .fw-loading-init__header {
+  font-size: 2.2em;
+}
+#section5 .fw-loading-init__status {
+  margin-top: 1em;
+  font-size: 0.8em;
+  opacity: 0.75;
+}
+
+/* stage wrapper (scoped) */
+#section5 .fw-stage-container {
+  overflow: hidden;
+  box-sizing: initial;
+  border: 1px solid #222;
+  margin: -1px;
+}
+@media (max-width: 840px) {
+  #section5 .fw-stage-container {
+    border: none;
+    margin: 0;
+  }
+}
+
+/* canvases wrapper */
+#section5 .fw-canvas-container {
+  width: 100%;
+  height: 100%;
+  transition: filter 0.3s;
+  position: relative; /* safe: only inside section5 */
+}
+#section5 .fw-canvas-container canvas {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: lighten;
+  transform: translateZ(0);
+}
+
+/* sssssssssssssssssssssssssss */
+
+
+
+#section5 { position: relative; overflow: hidden; }
+#section5 .fw-root{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+/* canvas container full size */
+#section5 .stage-container,
+#section5 .canvas-container{
+  position: absolute;
+  inset: 0;
+}
+#section5 .canvas-container { position: absolute; inset: 0; }
+#section5 canvas{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+
+/* bg shows after adding this */
+
+.canvas-container{ position:relative; overflow:hidden; }
+video.bg{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  z-index:0;
+}
+#trails-canvas, #main-canvas{
+  position:absolute; inset:0;
+  z-index:1;
+  background: transparent;
+}
+
+
+
+
+
+
+#section5 .controls,
+#section5 .menu,
+#section5 .help-modal,
+#section5 .loading-init,
+#section5 .btn,
+#section5 .form-row {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+
+
+
+
+
+
+
+/* ---------- Viewport-safe section heights (svh/dvh) ---------- */
+/* fallback first (old browsers) */
+section,
+#section3,
+#section4,
+#section5.fireworks-section {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+/* stable viewport height (prevents address-bar jump) */
+@supports (height: 100svh) {
+  section,
+  #section3,
+  #section4,
+  #section5.fireworks-section {
+    height: 100svh;
+    min-height: 100svh;
+  }
+}
+
+/* dynamic viewport height (matches real visible area on iOS) */
+@supports (height: 100dvh) {
+  section,
+  #section3,
+  #section4,
+  #section5.fireworks-section {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+/* ---------- iPad/iOS: lockScreen true vertical center ---------- */
+#lockScreen{
+  position: fixed;
+  inset: 0;
+
+  /* fallback */
+  height: 100vh;
+  min-height: 100vh;
+
+  /* keep your layout */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  /* iOS safe area (notch/home indicator) */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+/* stable viewport height (prevents toolbar jump) */
+@supports (height: 100svh){
+  #lockScreen{
+    height: 100svh;
+    min-height: 100svh;
+  }
+}
+
+/* dynamic viewport height (matches real visible area on iOS) */
+@supports (height: 100dvh){
+  #lockScreen{
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+
+
+
+/*section2.1*/
+
+
+#section2_1 .container{
+  top: 15vh;
+  padding: 5vh;          /* adjust for chart_1 loc , larger to the bottom*/
+}
+
+
+.norm {
+  font-family: 'norm';
+  color: #ffffff;
+  font-size: 20px;
+  margin-top: 0.1vw;
+  display: block;      
+}
+
+#section2_1 .h1{
+  position: relative;
+  z-index: 10;        /* above chart */
+  pointer-events: none; /* optional, prevents blocking hover */
+  font-size: 40px;
+}
+
+/* ---------- Swiper 3D Coverflow (pro UX look) ---------- */
+.coverflow-wrap{
+  margin-top: 15vh; /*move card down*/
+  width: 800px; /*card width*/
+  height: min(72vh, 760px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden; /* ✅ 关键：裁掉第 4 张 */
+}
+
+.myCoverflow{
+  width: 100%;
+  height: 100%;
+  padding: 40px 0 60px;
+}
+
+.myCoverflow .swiper-slide{
+  width: 100px; /*card width not working*/
+  height: clamp(360px, 48vh, 520px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================
+   CARD: fixed image area + fixed text area
+   (paste to REPLACE your .card3d / .card3d img / .card3d-text styles)
+   ========================= */
+
+.card3d{
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+
+  /* ✅ 关键：用 grid 把卡片切成“图片区 + 文本区” */
+  display: grid;
+  grid-template-rows: 58% 42%;  /* 你想图片更大就调前面，比如 62% 38% */
+
+  /* 质感：玻璃 + 高级阴影 */
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    0 18px 60px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  transform: translateZ(0);
+}
+
+/* ✅ 图片区：永远占满上半部分，不会被文字覆盖 */
+.card3d > img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.05) contrast(1.05);
+}
+
+/* ✅ 文本区：在下半部分，固定高度，不再 absolute 叠在图片上 */
+.card3d-text{
+  color: #fff;
+  padding: 14px 16px 18px;
+
+  /* 让结构更稳定 */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+
+  /* ✅ 你原来那种底部渐变还可以保留，但放在文本区背景里 */
+  background: linear-gradient(to top,
+    rgba(0,0,0,0.75),
+    rgba(0,0,0,0.25),
+    rgba(0,0,0,0.0)
+  );
+}
+
+/* 标题：固定最多 2 行，避免把布局撑乱 */
+.card3d-text h3{
+  margin: 0;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 日期：单行 */
+.card3d-text .card_date{
+  margin: 0;
+  opacity: 0.85;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 正文：占满剩余空间，太多就只在正文区域滚动（不改变卡片布局） */
+.card3d-text .card_text{
+  margin: 0;
+  opacity: 0.85;
+  font-size: 13px;
+  line-height: 1.45;
+
+  flex: 1;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* 可选：正文滚动条细一点好看 */
+.card3d-text .card_text::-webkit-scrollbar{
+  width: 6px;
+}
+.card3d-text .card_text::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.22);
+  border-radius: 999px;
+}
+
+
+/* pagination dots 更高级一点 */
+.myCoverflow .swiper-pagination-bullet{
+  width: 6px;
+  height: 6px;
+  opacity: 0.35;
+}
+.myCoverflow .swiper-pagination-bullet-active{
+  opacity: 1;
+  transform: scale(1.25);
+}
+
+/* arrows loc */
+.myCoverflow .swiper-button-prev,
+.myCoverflow .swiper-button-next{
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  top: 45%;
+  transform: translateY(-50%);
+}
+
+/*bubbles*/
+
+/* Bubble layer on top of fireworks, but below any UI you might have */
+
+
+
+
+
+
+
+
+
+
+
+#section5 { position: relative; overflow: hidden; }
+
+/* Layer above bg + canvases */
+#section5 #s5-bubble-layer{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;            /* video=0, canvas~=1, bubbles above them */
+  overflow: hidden;
+}
+
+/* bubble wrapper positioned by transform */
+#section5 .s5-bubble{
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  left: 0; top: 0;
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translate3d(var(--x0), var(--y0), 0) scale(1);
+  animation: s5BubbleFloat var(--life) linear forwards;
+}
+
+/* inner container */
+#section5 .s5-bubble-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+}
+
+/* the emoji image */
+#section5 .s5-bubble-emoji-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+
+
+  filter: brightness(1.25) contrast(1.12);
+ 
+  background: rgba(36, 26, 90, 0.25);
+
+  /* ✅ 关键：mask 用“实心遮罩”，不要用描边图 */
+  -webkit-mask: url("images/bubbles/bubble_mask1.png") center/100% 100% no-repeat;
+  mask: url("images/bubbles/bubble_mask1.png") center/170% 170% no-repeat;
+
+  /* （可选但很安全）确保在 frame 下面 */
+  z-index: 0;
+}
+
+/* outline frame */
+#section5 .s5-bubble-frame{
+  position: absolute;
+  transform:scale(1.7);
+  inset: 0;
+  background: url("images/bubbles/bubble.png") center/100% 100% no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: 0.75;
+  z-index: 1;
+}
+
+/* float + fade */
+@keyframes s5BubbleFloat{
+  0%   { opacity: 0;    transform: translate3d(var(--x0), var(--y0), 0) scale(0.96); }
+  10%  { opacity: 0.95; transform: translate3d(var(--x0), calc(var(--y0) - 8px), 0) scale(1); }
+  60%  { opacity: 0.8; }
+  78%  { opacity: 0.25; }
+  100% { opacity: 0;    transform: translate3d(var(--x1), var(--y1), 0) scale(1.02); }
+}
+/* add gentle side-to-side drift */
+#section5 .s5-bubble-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: none;
+
+  /* ✅ random-ish wobble */
+  animation: s5BubbleWobble var(--wobbleDur, 1400ms) ease-in-out infinite;
+  animation-delay: var(--wobbleDelay, 0ms);
+}
+
+@keyframes s5BubbleWobble{
+  0%   { transform: translateX(calc(var(--wobbleAmp, 10px) * -1)); }
+  50%  { transform: translateX(var(--wobbleAmp, 10px)); }
+  100% { transform: translateX(calc(var(--wobbleAmp, 10px) * -1)); }
+}
+
+
+
+
+/*firework text*/
+
+/* =========================
+   SECTION 5: Lyric/Text Player (TOPMOST)
+   ========================= */
+#section5 { position: relative; }
+
+/* topmost layer: above EVERYTHING */
+#section5 #s5-lyric-player{
+  position: absolute;
+  inset: 0;
+  z-index: 999999;        /* ✅ higher than any of your layers */
+  pointer-events: none;   /* ✅ never blocks clicks */
+  display: none;          /* shown by JS when running */
+}
+
+/* viewport for the vertical swipe */
+#section5 #s5-lyric-player .s5lp-viewport{
+  position: absolute;
+  left: 49%;
+  top:10%;
+  --feather: 16px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #040029 var(--feather),
+    #01003f calc(100% - var(--feather)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #00043d var(--feather),
+    #00043d calc(100% - var(--feather)),
+    transparent 100%
+  );
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;  
+  padding-top: 80px;
+  bottom: clamp(70px, 12vh, 160px); /* adjust vertical placement */
+  transform: translateX(-50%);
+  width: min(86vw, 900px);
+  height: clamp(110px, 16vh, 170px); /* shows prev/current/next nicely */
+  overflow: hidden;
+  filter: drop-shadow(0 18px 40px rgba(0,0,0,0.45));
+}
+
+/* the moving track (we translateY this) */
+#section5 #s5-lyric-player .s5lp-track{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  will-change: transform, opacity;
+  transform: translate3d(0,0,0);
+}
+
+/* each line */
+#section5 #s5-lyric-player .s5lp-line{
+  width: 100%;
+  text-align: center;
+  font-family: 'norm', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+
+  font-size: clamp(18px, 2.2vw, 34px);
+  padding: clamp(10px, 1.2vh, 14px) 10px;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* prev / next are gray + transparent */
+#section5 #s5-lyric-player .s5lp-line.is-dim{
+  color: rgba(220, 220, 220, 0.144);
+  text-shadow: none;
+  opacity: 0.2;
+}
+
+/* current line base: gray (before the sweep lights each letter) */
+#section5 #s5-lyric-player .s5lp-line.is-current{
+  color: rgba(220, 220, 220, 0.144);
+  text-shadow: none;
+}
+
+/* per character spans */
+#section5 #s5-lyric-player .s5lp-char{
+  display: inline-block;
+  color: inherit;
+  text-shadow: none;
+  will-change: color, text-shadow, filter;
+}
+
+/* the “turn white with pinkish glow” animation */
+@keyframes s5lp-charLight {
+  0% {
+    color: rgba(255, 255, 255, 0.35);
+    text-shadow: none;
+    opacity: 1;
+  }
+
+  60% {
+    color: #fff;
+    text-shadow:
+      0 0 8px rgba(255,120,210,0.55),
+      0 0 18px rgba(255,120,210,0.35);
+  }
+
+  100% {
+    color: #fff;
+    text-shadow:
+      0 0 10px rgba(255,120,210,0.85),
+      0 0 24px rgba(255,120,210,0.55),
+      0 0 44px rgba(255,120,210,0.25);
+  }
+}
+
+
+#section5 #s5-lyric-player .s5lp-track.is-sliding{
+  transition: transform 2680ms cubic-bezier(.22,.85,.22,1);
+}
+
+/* fade out at end */
+#section5 #s5-lyric-player.s5lp-fadeout .s5lp-track{
+  transition: opacity 520ms ease;
+  opacity: 0;
+}
+/* Hide placeholder line text but keep height (for perfect first round alignment) */
+#section5 #s5-lyric-player .s5lp-line.is-placeholder{
+  opacity: 0; /* keeps the line height but makes it invisible */
+}
+
+
+/*section3_1*/
+
+
+
+
+
+
+#section3_1{
+  justify-content: flex-start;
+  padding-top: 15vh;
+  gap: 24px;
+}
+#section3_1 .container{
+  position: relative;
+  margin-top: 0;
+  padding: 1vh;
+}
+
+
+.norm {
+  font-family: 'norm';
+  color: #ffffff;
+  font-size: 20px;
+  margin-top: 0.1vw;
+  display: block;      
+}
+
+#section3_1 .h1{
+  position: relative;
+  z-index: 10;        /* above chart */
+  pointer-events: none; /* optional, prevents blocking hover */
+  font-size: 40px;
+}
+
+
+
+/* ===== neon glow card (fixed + flip-ready) ===== */
+.card_31{
+  position: relative;
+  width: 600px;
+  height: 400px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  perspective: 1100px; /* ✅ for flip */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+
+
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);  
+}
+
+/* gradient frame */
+.card_31::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background: linear-gradient(315deg,#03a9f4,#ff0058);
+  z-index: 0;
+}
+
+/* blurred glow */
+.card_31::after{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background: linear-gradient(315deg,#03a9f4,#ff0058);
+  filter: blur(30px);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+
+
+
+/* cover penguin display */
+.card_31-frontMedia{
+  position: relative;
+  z-index: 2;
+  width: 120px;
+  height: 120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}/* cover penguin display shadow */
+.card_31-frontIcon{
+  width: 240px;
+  height: 240px;
+  object-fit: contain;
+  opacity: 0.85;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* filter: drop-shadow(0 10px 26px rgba(255, 255, 255, 0.55)); */
+  filter:
+    drop-shadow(-2px -2px 0 #25ccff)  /* top-left */
+    drop-shadow( 2px  2px 0 #ff31a2)  /* bottom-right */
+
+
+}
+
+/* ✅ put text under penguin */
+.card_31-frontMedia{
+  display: flex;
+  flex-direction: column;   /* ✅ put text under penguin */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;                /* space between penguin + text */
+  text-align: center;
+}
+
+ /* put text under not right */
+.card_31-frontMedia .p{
+  white-space: nowrap;       /* never wrap to new line */
+  writing-mode: horizontal-tb;
+}
+
+
+.card_31-frontMedia .think-emoji{
+  width: 1.8em;     /* ← change this number */
+  height: 1.8em;
+  vertical-align: -0.55em;  /* fine-tune baseline */
+}
+
+
+/* flip inside content */
+.card_31__content{
+  position: absolute;
+  inset: 8px;                 /* match inner border thickness */
+  border-radius: 14px;
+  box-sizing: border-box;
+
+  background: rgba(10, 10, 14, 0.699);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  transform: rotateX(-90deg);
+  transform-origin: bottom;
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  z-index: 3;
+  padding: 14px;
+}
+
+
+/* if delete disables flip*/
+/* ✅ 正确：class 选择器 */
+.card_31.is-open .card_31__content{
+  transform: rotateX(0deg);
+}
+
+.card_31.is-open .card_31-frontMedia{
+  transform: scale(0);
+  opacity: 0;
+}
+
+
+
+/* inner card setting*/
+.card_31-layout{
+  width: 100%;
+  height: 90%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  place-content: center;
+  place-items: center;
+  /* gap: 1px 1px; */
+
+
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-columns: 0.4fr 0.002fr 0.4fr;
+  grid-template-rows: auto auto;
+
+  place-content: center;  /* ✅ center the 2 rows as a block */
+  place-items: center;    /* ✅ center each cell content */
+
+  row-gap: 34px; /*avatar/text gap setting*/
+
+}
+
+
+/* avatar text */
+.card_31-title{
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.82);
+  text-align: center;
+  line-height: 3;
+}
+
+/* avatar */
+.card_31-pic{
+  width: 106px;
+  height: 106px;
+  border-radius: 20px; /* avatar shape */
+  object-fit: cover;
+  display: block;
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.55),
+    0 0 0 2px rgba(255,255,255,0.10);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#000, #000) padding-box,
+    linear-gradient(135deg, #03bcf4, #f40388) border-box;    
+}  
+
+
+.mid-stroke{
+  width: 106px;
+  height: 106px;
+  border-radius: 18px;
+
+  /* border: 2px solid transparent;
+  background:
+    linear-gradient(135deg, #03bcf444, #f4038860) border-box,
+    transparent padding-box; */
+}
+
+.mid-stroke > img{
+  filter:
+    drop-shadow(-2px -2px 0 #03bcf4)  /* top-left */
+    drop-shadow( 2px  2px 0 #f40388)  /* bottom-right */
+}
+
+/* bottom text centered */
+.card_31-bottom{
+  grid-column: 1 / -1;
+  width: 79%;
+  justify-self: center;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  text-align: center;
+}
+
+/* text color */
+.card_31-bottomText{
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.82);
+}
+
+
+
+
+/* hide the box */
+.card_31 .card_31-item.middle .mid-stroke > img{
+  position: relative;
+  z-index: 3 !important;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+}
+
+

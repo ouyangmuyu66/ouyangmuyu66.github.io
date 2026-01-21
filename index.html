@@ -2,106 +2,743 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>2024 Report</title>
-  <meta name="robots" content="noindex, nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Animation Demo</title>
   <link rel="stylesheet" href="style.css" />
-
-  <style>
-    /* Hide content initially */
-    #content {
-      visibility: hidden;
-      opacity: 0;
-    }
-
-    /* Optional: basic style for lock */
-    #lock {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 10px;
-      background: #f5f5f5;
-    }
-    #lock input {
-      padding: 8px;
-      font-size: 16px;
-    }
-    #lock button {
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+  <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  
+ 
 </head>
 <body>
 
-  <!-- PASSWORD FORM -->
-  <div id="lock">
-    <input type="password" id="pw" placeholder="Password">
-    <button onclick="unlock()">Enter</button>
+  <div id="star-field" aria-hidden="true"></div>
+
+  <div id="focus-overlay"></div>
+  <div id="focus-top"></div>
+
+  <!-- PASSWORD SCREEN -->
+  <div id="lockScreen">
+    <h1 class="login_title">请输入密码</h1>
+    <input type="password" id="passwordInput" placeholder="密码">
+    <br><br>
+    <button onclick="checkPassword()">确认</button>
+    <p id="errorText" style="color:red"></p>
+  </div>
+  
+  <!-- AUDIO (change src to your mp3 path) -->
+  <!-- LOADING SCREEN -->
+    <div id="loadingScreen" class="loading" style="display:none;">
+      <svg width="64px" height="48px">
+        <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="back"></polyline>
+        <polyline points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24" id="front"></polyline>
+      </svg>
+    </div>
+
+
+
+  <audio id="bgm" src="audio/Always_online.webm" loop preload="auto"></audio>
+  <!-- TOGGLE (keeps your .toggleSwitch CSS) -->
+  <div class="bgm-toggle">
+    <input type="checkbox" id="checkboxInput">
+
+    <label class="toggleSwitch" for="checkboxInput">
+
+        <div class="speaker"><svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 75 75">
+        <path d="M39.389,13.769 L22.235,28.606 L6,28.606 L6,47.699 L21.989,47.699 L39.389,62.75 L39.389,13.769z" style="stroke:#fff;stroke-width:5;stroke-linejoin:round;fill:#fff;"></path>
+        <path d="M48,27.6a19.5,19.5 0 0 1 0,21.4M55.1,20.5a30,30 0 0 1 0,35.6M61.6,14a38.8,38.8 0 0 1 0,48.6" style="fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round"></path>
+        </svg></div>
+
+        <div class="mute-speaker"><svg version="1.0" viewBox="0 0 75 75" stroke="#fff" stroke-width="5">
+        <path d="m39,14-17,15H6V48H22l17,15z" fill="#fff" stroke-linejoin="round"></path>
+        <path d="m49,26 20,24m0-24-20,24" fill="#fff" stroke-linecap="round"></path>
+        </svg></div>
+
+    </label>
   </div>
 
-  <!-- SITE CONTENT -->
-  <div id="content">
-    <section class="hero">
-      <h1 class="load">2024 Report</h1>
-      <p class="load">Private archive</p>
+
+
+  <!-- REAL CONTENT (LOCKED) -->
+  <div id="content" style="display:none;">
+      <section class="typing-group p" id="section1">
+              <button class="scroll-button">
+                  <span>下</span>
+                  <span>一</span>
+                  <span>页</span>
+                  <span class="arrow">↓</span>
+              </button>        
+              <div class="container">
+                  
+                  <h1>
+                      <span class="typing thin title" data-speed="60">2025</span>
+                      <span class="typing title" data-speed="60">年快要结束了</span>
+
+                  </h1>
+                  <div class="text_container" data-speed="30">
+                      <span class="quote">“</span>
+                      <p class="typing" >
+                          生日快乐，我的小可耐~<!-- 记录 No.01：她出现的那天 -->
+                      </p>
+                      <br>
+                      <p class="typing">
+                          时光荏苒，转眼间这是我们在一起快一年了.
+                      </p>
+                      <br>
+                      <p class="typing">
+                          老婆总是爱走神，总有那么多小动作让我发笑，没办法，我只能用这种方法咯~
+                          <img src="emoji/s264.gif" alt="笑脸" class="emoji delayed">
+                      </p>
+                      <br>
+                      <p class="typing">
+                          这是我对你记忆的整合, 也是我为你做的第一个生日礼物...
+                      </p>
+                      <br>
+                      <p class="typing">
+                          我想记录下关于你的一切, 你不知道的, 没注意到的，
+                          还有那些我感觉重要且有意义的瞬间.       
+                      </p>
+                      
+                      <span class="quote-right">”</span>
+                  </div>
+                </div>
+    
     </section>
 
-    <section class="content">
-      <div class="card reveal">Message block 1</div>
-      <div class="card reveal">Message block 2</div>
-      <div class="card reveal">Message block 3</div>
-    </section>
+    <section class="typing-group p" id="section2">
+
+      <h1>
+        <span class="typing thin title" data-speed="60">2025</span>
+        <span class="typing title" data-speed="60">年快结束了</span>
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">↓</span>
+        </button>
+      </h1>
+
+      <div class="chat_container">
+          <div class="message-row left">
+              <img class="avatar" src="images/you_small.jpg">
+                  <div class="bubble left-bubble">备注小意</div>       
+          </div>
+
+
+          <!-- Example RIGHT chat (bubble appears to the RIGHT of avatar) -->
+          <div class="message-row right thinking-enabled">
+            <div class="bubble right-bubble">哈喽~</div>
+            <div class="avatar" onclick="toggleAvatarFocus(this)">
+              <img class="avatar-base" src="images/me_small.jpg" alt="">
+              <img class="avatar-focus" src="images/me_cry.jpg">
+            
+              <div class="thinking-bubble side-right" aria-hidden="true">
+                <div class="dots">
+                  <span class="dot d1"></span>
+                  <span class="dot d2"></span>
+                  <span class="dot d3"></span>
+                </div>
+                <div class="main-bubble">
+                    丸辣丸辣，我还想着这个点她那边还很早就先晚点发好了，怎么该死的手手消息自动点出去啦！！！啊啊啊啊啊啊啊啊啊啊啊啊，我这个老六啊，镇定镇定
+                    <img src="emoji/s110.gif" alt="笑脸" class="think-emoji">   
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Example LEFT chat (bubble appears to the RIGHT of avatar) -->
+          <div class="message-row left thinking-enabled">
+              <div class="avatar" aria-hidden="false" onclick="toggleAvatarFocus(this)">
+                  <img class="avatar-base" src="images/you_small.jpg" alt="">
+                  <img class="avatar-focus" src="images/you_angry.jpg" alt="">
+
+                  <div class="thinking-bubble side-left" aria-hidden="true">
+                      <div class="dots">
+                          <span class="dot d1"></span >
+                          <span class="dot d2"></span>
+                          <span class="dot d3"></span>
+                      </div>
+                      <div class="main-bubble">
+                          <img src="emoji/s11.gif" alt="笑脸" class="think-emoji">
+                          这人怎么这样，给她发消息每次都凌晨回，有病吧
+                      </div>         
+                  </div>
+              </div>
+              <div class="bubble left-bubble">你好</div>
+          </div>  
+
+          <!-- Example RIGHT chat (bubble appears to the RIGHT of avatar) -->
+          <div class="message-row right thinking-enabled">
+            <div class="bubble right-bubble">平时玩游戏嘛？</div>
+            <div class="avatar" onclick="toggleAvatarFocus(this)">
+              <img class="avatar-base" src="images/me_small.jpg" alt="">
+              <img class="avatar-focus" src="images/Q_me.jpg">
+            
+              <div class="thinking-bubble side-right" aria-hidden="true">
+                <div class="dots">
+                  <span class="dot d1"></span>
+                  <span class="dot d2"></span>
+                  <span class="dot d3"></span>
+                </div>
+                <div class="main-bubble">
+                    我嘞个豆？她竟然回了？！这个点她竟然醒着？？？？emmmm.....很多人应该都喜欢玩游戏吧<img src="emoji/s32.gif" alt="笑脸" class="think-emoji">这样问应该不会翻车，咳咳                    
+                </div>
+              </div>
+            </div>
+          </div>
+     
+
+          <!-- <div class="message-row right">
+              <div class="bubble right-bubble">ss水水水</div>
+              <div class="avatar" aria-hidden="false" onclick="toggleAvatarFocus(this)">
+                  <img class="avatar-base" src="images/me_small.jpg">
+                  <img class="avatar-focus" src="images/you_small.jpg">
+              </div>
+          </div> -->  
+    </section>  
+    
+
+    <section class="typing-group" id="section3_1">
+        <div class="container">
+          <span class="typing title h1" data-speed="60">消息类型占比</span>
+          <span class="typing norm" data-speed="60">小意（应果蓉）x 熙（尹熙琳）</span>
+        </div>
+    
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">↓</span>
+        </button>
+
+        <div class="card_31">
+          <!-- FRONT (what shows before flip) -->
+          <div class="card_31-frontMedia">
+            <img class="card_31-frontIcon" src="images/gaoya2.PNG" alt="">
+            <div class="p">囊囊囊~<img src="emoji/s305.gif" alt="笑脸" class="think-emoji">有种点我~</div>
+          </div>
+
+          <!-- FLIP-UP CONTENT (your avatars row + bottom text) -->
+          <div class="card_31__content">
+            <div class="card_31-layout">
+              <div class="card_31-item">
+                <div class="card_31-title">奶蓉</div>
+                <img class="card_31-pic" src="images/you_big.jpg" alt="">
+              </div>
+
+              <div class="card_31-item middle">
+                <div class="card_31-title">&nbsp;</div>
+                <div class="mid-stroke">
+                  <img class="card_31-pic mid" src="images/gaoya.PNG" alt="">
+                </div>
+              </div>
+
+              <div class="card_31-item">
+                <div class="card_31-title">奶熙</div>
+                <img class="card_31-pic" src="images/me_big.jpg" alt="">
+              </div>
+
+              <div class="card_31-bottom">
+                <p class="card_31-bottomText">我们已经在一起<span id="loveTimer">计算中...</span>啦， 其实...我并不知道怎么表达对你的“喜欢” 我总是学者你的表达方式...可好像总是学不好呢</p>
+             
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+    </section>  
+
+    <section class="typing-group" id="section2_1">
+        <div class="container">
+          <span class="typing title h1" data-speed="60">你还记得吗</span>
+          <span class="typing norm" data-speed="60">这是我们的回忆</span>
+        </div>
+    
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">↓</span>
+        </button>
+        
+        <div class="coverflow-wrap">
+          <div class="swiper myCoverflow">
+            <div class="swiper-wrapper">
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/Q_interested.jpg" alt="">
+                  <div class="card3d-text">
+                    <h3>故事的开始</h3>
+                    <p class="card_date">2025-05​-20</p>
+                    <p class="card_text">​想学​语言​的​我​ ​那​天​恰好​在​小红书​上​看到​了​你​的​扩列​帖子​ ​好​像​无形​中​有​某​种​力量​指​引​着​我</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/1.PNG" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​展现​空荡​大脑</h3>
+                    <p class="card_date">2025-05-23</p>
+                    <p class="card_text">​当时​进​老​婆队​的​瞬间​就​开​了​ ​没​来​得​及确认​老​婆id​还​记得​安其拉​在​泉水​挂​机 ​我​以​为​那​是​你​的​时候​嘛？​</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/Q_redface.jpg" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​开麦</h3>
+                    <p class="card_date">2025-07-05</p>
+                    <p class="card_text">​那时​也​不​知​是​老婆害羞​还​是​怎么​了​ ​当时​鼓起​勇气​开​麦 ​很​想​和​你​开卖​交流 ​结果​硬生​生摩​了​老婆​半​个​多月​ ​在​那​之前​都​是​一​整局​下来​一​两​句​话 ​第一​次​听见​老婆​说​话​ 好​开心​ ​小心脏扑​通扑通​的​</p>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/2.PNG" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​语音​通话​</h3>
+                    <p class="card_date">2025-07​-1​7</p>
+                    <p class="card_text">​还​记得​吗？​电话​接通​的​瞬间​老婆​关麦偷笑 ​笑​得​停​不​下来​​</p>
+                  </div>
+                </div>
+              </div>
+
+
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/3.PNG" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​一起​过生日​</h3>
+                    <p class="card_date">2025-12-23</p>
+                    <p class="card_text">​虽然​电影.​..​只​看​完​一​半 但​我​真的​感觉​和​老婆​看 ​很​幸福​ ​电影​是​什么​都​可以​ ​我​只​在​意是​与​你​一起​看 ​就​会​很​幸福​​​</p>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/6.PNG" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​与​你​看​电影​</h3>
+                    <p class="card_date">2025-​1​1-01</p>
+                    <p class="card_text">虽然​电影.​..​只​看​完​一​半 但​我​真的​感觉​和​老婆​看 ​很​幸福​ ​电影​是​什么​都​可以​ ​我​只​在​意是​与​你​一起​看 ​就​会​很​幸福​​</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/4.jpg" alt="">
+                  <div class="card3d-text">
+                    <h3>第一​次​共​享视觉​看烟​花​</h3>
+                    <p class="card_date">2025-06-26</p>
+                    <p class="card_text">​虽然​我们​在​异地​ ​当时​我们​也​只​是​朋友 但​我​也​不​知道​为什么​就​是​先​给​你​看 ​虽然​手机​拍摄​的​烟花​远​没有​肉眼好​看​吧.​..​（其实​那​天​视频​剪切后​的​长度​数字​“521”​老婆​没​说​之前​我​并没有​发现​ ​这​就​是​所谓​的​缘分​吗​ 5​20相遇 ​之后​好几​次​巧合）​​当时​想​的​是​ ​知道​你​在​世界​的​某一​处​存在​ ​就​好​安心 好​幸福​​​​</p>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="card3d">
+                  <img src="images/5.PNG" alt="">
+                  <div class="card3d-text">
+                    <h3>真心话​</h3>
+                    <p class="card_date">2026-01-09</p>
+                    <p class="card_text">其实​.​..​当​你​问​我​是​在​那​一​刻​发现​自己​喜欢​你​ ​我​并不​知道​ ​或许​是​因为​是​渐渐​的​ 因为​这些​所有​瞬间​ ​形成​的​潜意识‘​在​意’​ ​当​我​意识​到​这​一​点​时 ​那​种​‘​在​意’​已经​是​代表​“爱”​原本​最​纯​粹 ​无目​的​性​的​样子​了​吧 ​只要​你​需要​我​ ​我​就​会​在​ 谢谢​你​ ​老婆 ​我​爱​你​ ​你​对​我​而​言.​..​很​特别​ ​从​未​有​过​的​ ​那​种​​</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 可选：分页点 -->
+            <div class="swiper-pagination"></div>
+
+            <!-- 可选：左右箭头 -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+          </div>
+        </div>
+
+    </section>  
+
+
+
+    <section class="typing-group" id="section3">
+        <div class="container">
+          <span class="typing title h1" data-speed="60">消息类型占比</span>
+          <span class="typing norm" data-speed="60">小意（应果蓉）x 熙（尹熙琳）</span>
+        </div>
+    
+        <button class="scroll-button">
+          <span>下</span>
+          <span>一</span>
+          <span>页</span>
+          <span id="arrow">↓</span>
+        </button>
+        
+        <script src="chart_1.js"></script>
+        <div class="chart-wrap">
+          <div id="msgChart"></div>
+        </div>        
+    </section>  
+
+
+
+    <section class="typing-group" id="section4">
+        <div class="container">
+          <span class="typing title h1" data-speed="60">消息类型占比</span>
+          <span class="typing norm" data-speed="60">小意（应果蓉）x 熙（尹熙琳）</span>
+        </div>
+    
+    <button class="scroll-button">
+      <span>下</span>
+      <span>一</span>
+      <span>页</span>
+      <span id="arrow">↓</span>
+    </button>
+    
+    
+    <div class="chart2-wrap">
+      
+      <div id="msgChart2"></div>
+      <div class="chart-axis-label y-label">消息数</div>
+    </div>
+    <script src="chart_2.js"></script>
+      
+    </section>  
+
+
+  <section id="section5" class="fireworks-section">
+
+    <!-- ✅ SECTION 5: Lyric/Text Player (TOPMOST LAYER) -->
+    <div id="s5-lyric-player" aria-hidden="true">
+      <div class="s5lp-viewport">
+        <div class="s5lp-track"></div>
+      </div>
+    </div>
+
+    <!-- ✅ load after section5 exists (after your other scripts is fine) -->
+    <!-- <script src="firework_text.js" defer></script> -->
+
+
+    <!-- background webm -->
+    <video class="s5-bgvideo"
+          src="assets/animation.webm"
+          muted
+          playsinline
+          preload="metadata"></video>
+    
+    <div id="s5-bubble-layer" aria-hidden="true"></div>
+   
+
+    <div class="fw-root">
+      <div class="loading-init">
+        <div class="loading-init__status">Loading...</div>
+      </div>
+
+      <div class="stage-container remove">
+        <div class="canvas-container">
+          <canvas id="trails-canvas"></canvas>
+          <canvas id="main-canvas"></canvas>
+        </div>
+
+
+
+        <!-- ✅ 必须：menu 里要有这些输入控件（class 名必须对上） -->
+        <div class="menu hide">
+          <div class="menu__inner-wrap">
+            <div class="form-row">
+              <span class="shell-type-label">烟花类型</span>
+              <select class="shell-type"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="shell-size-label">烟花大小</span>
+              <select class="shell-size"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="quality-ui-label">渲染质量</span>
+              <select class="quality-ui"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="sky-lighting-label">照亮天空</span>
+              <select class="sky-lighting"></select>
+            </div>
+
+            <div class="form-row">
+              <span class="scaleFactor-label">天空缩放</span>
+              <select class="scaleFactor"></select>
+            </div>
+
+            <label class="form-row">
+              <input class="auto-launch" type="checkbox" checked>
+              <span class="auto-launch-label">自动燃放</span>
+            </label>
+
+            <label class="form-row form-option--finale-mode">
+              <input class="finale-mode" type="checkbox">
+              <span class="finale-mode-label">同时燃放</span>
+            </label>
+
+            <label class="form-row">
+              <input class="hide-controls" type="checkbox">
+              <span class="hide-controls-label">隐藏按钮</span>
+            </label>
+
+            <label class="form-row form-option--fullscreen">
+              <input class="fullscreen" type="checkbox">
+              <span class="fullscreen-label">全屏体验</span>
+            </label>
+
+            <label class="form-row">
+              <input class="long-exposure" type="checkbox">
+              <span class="long-exposure-label">保留光轨</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- help modal（script.js 也会用到） -->
+        <div class="help-modal">
+          <div class="help-modal__overlay"></div>
+          <div class="help-modal__content">
+            <div class="help-modal__header"></div>
+            <div class="help-modal__body"></div>
+            <button class="help-modal__close-btn" type="button">X</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- icons -->
+      <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+        <symbol id="icon-play" viewBox="0 0 24 24">
+          <polygon points="5,3 19,12 5,21"></polygon>
+        </symbol>
+        <symbol id="icon-pause" viewBox="0 0 24 24">
+          <rect x="5" y="3" width="5" height="18"></rect>
+          <rect x="14" y="3" width="5" height="18"></rect>
+        </symbol>
+        <symbol id="icon-sound-on" viewBox="0 0 24 24">
+          <path d="M3 9v6h4l5 5V4L7 9z"></path>
+          <path d="M16 8a5 5 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2"></path>
+        </symbol>
+        <symbol id="icon-sound-off" viewBox="0 0 24 24">
+          <path d="M3 9v6h4l5 5V4L7 9z"></path>
+          <path d="M16 8l6 8M22 8l-6 8" fill="none" stroke="currentColor" stroke-width="2"></path>
+        </symbol>
+      </svg>
+
+    </div>
+  </section>
+
+
   </div>
 
-  <!-- GSAP Animations -->
-  <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-  <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
 
-  <!-- PASSWORD + animation initialization -->
-  <script>
-    function unlock() {
-      const password = document.getElementById("pw").value;
-      if (password === "1") { // your password here
-        document.getElementById("lock").style.display = "none";
+<script>
 
-        const content = document.getElementById("content");
-        content.style.visibility = "visible";
 
-        // Fade in entire content quickly
-        gsap.to(content, { opacity: 1, duration: 0.5 });
+const bg = document.querySelector('#section5 .s5-bgvideo');
 
-        // Initialize animations after showing content
-        initAnimations();
-      } else {
-        alert("Incorrect password");
-      }
+if (bg) {
+  // 确保只播一次
+  bg.loop = false;
+
+  // 播完停在最后一帧
+  bg.addEventListener('ended', () => {
+    // 某些浏览器 ended 时 currentTime 已是 duration
+    // 这里再“钉”一下最后一帧
+    const eps = 0.04; // 约1~2帧的误差
+    bg.currentTime = Math.max(0, bg.duration - eps);
+    bg.pause();
+  });
+
+  // 保险：如果用户跳转回来，确保不重新 loop
+  bg.addEventListener('timeupdate', () => {
+    if (!bg.loop && bg.duration && bg.currentTime >= bg.duration - 0.04) {
+      bg.pause();
     }
+  });
+}
 
-    function initAnimations() {
-      // Load animations for hero section
-      gsap.from(".load", { opacity: 0, y: 50, duration: 1, stagger: 0.3 });
+</script>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="js/fscreen@1.0.1.js"></script>
+<script src="js/Stage@0.1.4.js"></script>
+<script src="js/MyMath.js"></script>
 
-      // Scroll-triggered reveal for cards
-      gsap.utils.toArray(".reveal").forEach((el) => {
-        gsap.from(el, {
-          scrollTrigger: {
-            trigger: el,
-            start: "top 80%",
-            toggleActions: "play none none none",
-          },
-          opacity: 0,
-          y: 50,
-          duration: 0.8,
-        });
+<script src="js/script.js"></script>
+<script src="anim.js"></script>
+
+<script src="bgm.js" defer></script>
+<script src="password.js"></script>
+<script src="focus.js"></script>
+
+
+<script src="firework_text.js"></script>
+<script src="fire_bubbles.js"></script>
+
+<script>
+(() => {
+  const section = document.querySelector('#section5');
+  const bg = document.querySelector('#section5 .s5-bgvideo');
+
+  if (!section || !bg) return;
+
+  bg.loop = false;
+
+  let started = false;
+  let ended = false;
+
+  function pinLastFrame() {
+    const eps = 0.04;
+    if (bg.duration && isFinite(bg.duration)) {
+      bg.currentTime = Math.max(0, bg.duration - eps);
+    }
+    bg.pause();
+    ended = true;
+  }
+
+  bg.addEventListener('ended', pinLastFrame);
+
+  const io = new IntersectionObserver(([entry]) => {
+    if (!entry) return;
+
+    if (entry.isIntersecting) {
+      if (!started) {
+        started = true;
+        ended = false;
+        try { bg.currentTime = 0; } catch(e){}
+        const p = bg.play();
+        if (p?.catch) p.catch(() => {});
+      } else if (ended) {
+        pinLastFrame();
+      }
+    } else {
+      if (!ended) bg.pause();
+    }
+  }, { threshold: 0.35 });
+
+  io.observe(section);
+
+  // iOS / iPad Safari 防止后台偷跑
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !ended) {
+      bg.pause();
+    }
+  });
+})();
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+
+  const swiper = new Swiper(".myCoverflow", {
+    effect: "coverflow",
+    centeredSlides: true,
+    slidesPerView: "3",
+ 
+    loop: false,   // ✅ 关键
+    speed: 900,
+
+    coverflowEffect: {
+      rotate: 45,
+      depth: 260,
+      modifier: 1.1,
+      slideShadows: true,
+      stretch: 0
+    },
+
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev"
+    }
+  });
+
+  
+  /* ✅ 关键修复：section2_1 出现时强制刷新 */
+  const s21 = document.querySelector('#section2_1');
+
+  const s21Observer = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      requestAnimationFrame(() => {
+        swiper.update();            // 只刷新尺寸 & 3D
+        swiper.updateSlides();      // 确保 coverflow 重新算
+        swiper.updateProgress();
       });
     }
-  </script>
+  }, { threshold: 0.4 });
 
-  <!-- Your custom animations if any -->
-  <script src="anim.js"></script>
+  s21Observer.observe(s21);
+</script>
+
+
+
+
+
+
+
+<script>
+(function loveTimerInit(){
+  const el = document.getElementById('loveTimer');
+  if (!el) {
+    console.warn('[loveTimer] #loveTimer not found');
+    return;
+  }
+
+  // 起点：2025-05-21 16:39（中国时间 UTC+8）
+  // 转成 UTC：减 8 小时 => 2025-05-21 08:39 UTC
+  const startUTC = Date.UTC(2025, 4, 21, 8, 39, 0); // 月份从 0 开始：4 = 5月
+
+  function pad2(n){ return String(n).padStart(2, '0'); }
+
+  function tick(){
+    const now = Date.now();           // UTC 毫秒时间戳（与时区无关）
+    let diff = Math.max(0, now - startUTC);
+
+    const sec = Math.floor(diff / 1000);
+    const days = Math.floor(sec / 86400);
+    const hours = Math.floor((sec % 86400) / 3600);
+    const mins  = Math.floor((sec % 3600) / 60);
+    const secs  = sec % 60;
+
+    el.textContent = ` ${days}天${pad2(hours)}小时${pad2(mins)}分钟${pad2(secs)}秒`;
+  }
+
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const card = document.querySelector('.card_31');
+  if (!card) return;
+
+  card.addEventListener('click', () => {
+    card.classList.toggle('is-open');
+  });
+});
+
+</script>
+
+
+
 
 </body>
 </html>
