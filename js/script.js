@@ -38,9 +38,9 @@ const HARD_CLEAR_AFTER_MS = 1000; // 1 second
 let lastParticleSeenAt = 0;       // performance.now() timestamp
 
 function getDefaultScaleFactor() {
-	if (IS_MOBILE) return 0.9;
-	if (IS_HEADER) return 0.75;
-	return 1;
+	if (IS_MOBILE) return 0.7;
+	if (IS_HEADER) return 0.55;
+	return 0.8;
 }
 
 // Width/height values that take scale into account.
@@ -95,7 +95,7 @@ const MASK = {
   h: 0.30    // 25% height
 };
 
-let SHOW_MASK_DEBUG = false; // 显示红框（定位用）
+let SHOW_MASK_DEBUG = true; // 显示红框（定位用）
 let ENABLE_MASK = true;   // 是否真的遮挡烟花
 // ===============================================
 
@@ -1512,54 +1512,52 @@ function render(speed, frameTimeMs) {
   const trailsCtx = trailsStage.ctx;
   const mainCtx = mainStage.ctx;
 
-  // ✅ prevent scale stacking
+  // ===============================
+  // 0) Always keep container transparent (no "black sky")
+  // ===============================
+  if (appNodes.canvasContainer) appNodes.canvasContainer.style.backgroundColor = 'transparent';
+
+  // ===============================
+  // 1) Reset transforms (prevent scale stacking)
+  // ===============================
   trailsCtx.setTransform(1, 0, 0, 1, 0, 0);
   mainCtx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // (optional) sky lighting tint behind canvases
-  if (skyLightingSelector() !== SKY_LIGHT_NONE) {
-    colorSky(speed);
-  } else {
-    // ✅ ensure truly transparent background when skyLighting off
-    if (appNodes.canvasContainer) appNodes.canvasContainer.style.backgroundColor = 'transparent';
-  }
-
-  // apply scale once per frame
+  // Apply DPI + scaleFactor once per frame
   const scaleFactor = scaleFactorSelector();
   const sx = dpr * scaleFactor;
   const sy = dpr * scaleFactor;
   trailsCtx.scale(sx, sy);
   mainCtx.scale(sx, sy);
 
-  // =========================================================
-  // ✅ TRANSPARENT TRAILS FADE (NO BLACK BACKGROUND)
-  // This erases alpha from trails canvas instead of drawing black.
-  // =========================================================
+  // ===============================
+  // 2) Transparent trails fade (NO BLACK PAINT)
+  //    We erase alpha instead of drawing black.
+  // ===============================
+  const dt = Math.max(0, Math.min(50, frameTimeMs || 16.7));
+
   trailsCtx.globalCompositeOperation = 'destination-out';
 
   if (store.state.config.longExposure) {
-    // long exposure: erase very slowly (still transparent)
+    // super slow fade, still transparent
     trailsCtx.fillStyle = 'rgba(0,0,0,0.0025)';
   } else {
-    // time-based erase so it behaves consistently
-    const dt = Math.max(0, Math.min(50, frameTimeMs || 16.7));
-
-    // bg stain trailer remove
-	const eraseAlpha = 1 - Math.pow(0.00000001, dt / HARD_CLEAR_AFTER_MS);
-
+    // time-based erase towards fully clear
+    // same idea as your HARD_CLEAR_AFTER_MS, but stable across FPS
+    const eraseAlpha = 1 - Math.pow(0.00000001, dt / HARD_CLEAR_AFTER_MS);
     trailsCtx.fillStyle = `rgba(0,0,0,${eraseAlpha})`;
   }
 
   trailsCtx.fillRect(0, 0, width, height);
 
-  // main is per-frame only
+  // main canvas is per-frame only
   mainCtx.globalCompositeOperation = 'source-over';
   mainCtx.clearRect(0, 0, width, height);
 
-  // =========================================================
-  // ✅ SAME METHOD AS ORIGINAL (stamp bloom), but it fades via erasing
-  // BurstFlash goes to TRAILS (persistent), then gets erased over time.
-  // =========================================================
+  // ===============================
+  // 3) Burst flash (match original look)
+  //    Must be source-over (Safari gradient bug with lighten)
+  // ===============================
   trailsCtx.globalCompositeOperation = 'source-over';
   while (BurstFlash.active.length) {
     const bf = BurstFlash.active.pop();
@@ -1569,11 +1567,10 @@ function render(speed, frameTimeMs) {
       bf.x, bf.y, bf.radius
     );
 
-    // ✅ use warm original-like bloom (NOT your dark purple values)
-	burstGradient.addColorStop(0.024, 'rgba(255, 255, 255, 1)');
-	burstGradient.addColorStop(0.125, 'rgba(255, 160, 20, 0.20)');
-	burstGradient.addColorStop(0.32,  'rgba(255, 140, 20, 0.11)');
-	burstGradient.addColorStop(1,     'rgba(255, 120, 20, 0)');
+    burstGradient.addColorStop(0.024, 'rgba(255, 255, 255, 1)');
+    burstGradient.addColorStop(0.125, 'rgba(255, 160, 20, 0.20)');
+    burstGradient.addColorStop(0.32,  'rgba(255, 140, 20, 0.11)');
+    burstGradient.addColorStop(1,     'rgba(255, 120, 20, 0)');
 
     trailsCtx.fillStyle = burstGradient;
     trailsCtx.fillRect(bf.x - bf.radius, bf.y - bf.radius, bf.radius * 2, bf.radius * 2);
@@ -1581,33 +1578,33 @@ function render(speed, frameTimeMs) {
     BurstFlash.returnInstance(bf);
   }
 
-  // =========================================================
-  // draw particles onto TRAILS canvas (persistent trails)
-  // =========================================================
+  // ===============================
+  // 4) Draw particles (match original blend)
+  // ===============================
   trailsCtx.globalCompositeOperation = 'lighten';
 
   // Stars
   trailsCtx.lineWidth = Star.drawWidth;
   trailsCtx.lineCap = isLowQuality ? 'square' : 'round';
 
-  // little bright cores on main canvas
+  // small bright cores on main canvas (same as precedent)
   mainCtx.strokeStyle = '#fff';
   mainCtx.lineWidth = 1;
   mainCtx.beginPath();
 
   COLOR_CODES.forEach(color => {
     const stars = Star.active[color];
+
     trailsCtx.strokeStyle = color;
     trailsCtx.beginPath();
 
     stars.forEach(star => {
-      if (star.visible) {
-        trailsCtx.moveTo(star.x, star.y);
-        trailsCtx.lineTo(star.prevX, star.prevY);
+      if (!star.visible) return;
+      trailsCtx.moveTo(star.x, star.y);
+      trailsCtx.lineTo(star.prevX, star.prevY);
 
-        mainCtx.moveTo(star.x, star.y);
-        mainCtx.lineTo(star.x - star.speedX * 1.6, star.y - star.speedY * 1.6);
-      }
+      mainCtx.moveTo(star.x, star.y);
+      mainCtx.lineTo(star.x - star.speedX * 1.6, star.y - star.speedY * 1.6);
     });
 
     trailsCtx.stroke();
@@ -1621,6 +1618,7 @@ function render(speed, frameTimeMs) {
 
   COLOR_CODES.forEach(color => {
     const sparks = Spark.active[color];
+
     trailsCtx.strokeStyle = color;
     trailsCtx.beginPath();
 
@@ -1632,17 +1630,32 @@ function render(speed, frameTimeMs) {
     trailsCtx.stroke();
   });
 
-  // mask cutout AFTER drawing
-  if (ENABLE_MASK) {
+  // ===============================
+  // 5) ENABLE_MASK behavior:
+  //    - inside rect: invisible
+  //    - outside rect: visible
+  //
+  // "mask cutout gone after 1 sec":
+  // we only apply the cutout while fireworks are active,
+  // and for 1s after the last particle was seen.
+  // ===============================
+  const maskShouldBeActive =
+    ENABLE_MASK && (performance.now() - lastParticleSeenAt) <= 1000;
+
+  if (maskShouldBeActive) {
     applyRectMaskCutout(trailsCtx);
     applyRectMaskCutout(mainCtx);
   }
+
   if (SHOW_MASK_DEBUG) {
+    // Debug only (doesn't affect physics)
     drawMaskDebug(trailsCtx);
     drawMaskDebug(mainCtx);
   }
 
-  // speed bar
+  // ===============================
+  // 6) Speed bar (same as original)
+  // ===============================
   if (speedBarOpacity) {
     const speedBarHeight = 6;
     mainCtx.globalAlpha = speedBarOpacity;
@@ -1651,6 +1664,9 @@ function render(speed, frameTimeMs) {
     mainCtx.globalAlpha = 1;
   }
 
+  // ===============================
+  // 7) Reset transforms for next frame
+  // ===============================
   trailsCtx.setTransform(1, 0, 0, 1, 0, 0);
   mainCtx.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -1967,7 +1983,7 @@ class Shell {
 	
 	burst(x, y) {
 		// 🔥 GLOBAL firework size scale (1 = original)
-		const GLOBAL_SPREAD_SCALE = 0.8;
+		const GLOBAL_SPREAD_SCALE = 0.5;
 
 		// Set burst speed so overall burst grows to set size.
 		const speed = (this.spreadSize * GLOBAL_SPREAD_SCALE) / 96;
