@@ -1592,23 +1592,71 @@ function render(speed, frameTimeMs) {
   mainCtx.lineWidth = 1;
   mainCtx.beginPath();
 
+
+// fire work tail
+const LONG_TAIL = isHighQuality ? 5.2 : (isNormalQuality ? 4.2 : 3.2); // long faint part
+const HEAD_TAIL = 1.9;                                                 // short bright head
+const LONG_ALPHA = isLowQuality ? 0.16 : 0.22;                         // fade amount
+const LONG_WIDTH_MULT = 0.75;                                          // thinner long tail
+
+trailsCtx.lineWidth = Star.drawWidth;
+trailsCtx.lineCap = isLowQuality ? 'square' : 'round';
+
+mainCtx.strokeStyle = '#fff';
+mainCtx.lineWidth = 1;
+mainCtx.beginPath();
+
   COLOR_CODES.forEach(color => {
-    const stars = Star.active[color];
+	const stars = Star.active[color];
+	if (!stars.length) return;
 
-    trailsCtx.strokeStyle = color;
-    trailsCtx.beginPath();
+	// ---------- PASS 1: long faint tail ----------
+	trailsCtx.strokeStyle = color;
+	trailsCtx.globalAlpha = LONG_ALPHA;
+	trailsCtx.lineWidth = Math.max(0.75, Star.drawWidth * LONG_WIDTH_MULT);
+	trailsCtx.beginPath();
 
-    stars.forEach(star => {
-      if (!star.visible) return;
-      trailsCtx.moveTo(star.x, star.y);
-      trailsCtx.lineTo(star.prevX, star.prevY);
+	for (let i = 0; i < stars.length; i++) {
+		const star = stars[i];
+		if (!star.visible) continue;
 
-      mainCtx.moveTo(star.x, star.y);
-      mainCtx.lineTo(star.x - star.speedX * 1.6, star.y - star.speedY * 1.6);
-    });
+		const dx = star.x - star.prevX;
+		const dy = star.y - star.prevY;
 
-    trailsCtx.stroke();
+		trailsCtx.moveTo(star.x, star.y);
+		trailsCtx.lineTo(star.x - dx * LONG_TAIL, star.y - dy * LONG_TAIL);
+	}
+	trailsCtx.stroke();
+
+	// ---------- PASS 2: short bright head (pointy feel) ----------
+	trailsCtx.globalAlpha = 1;
+	trailsCtx.lineWidth = Star.drawWidth;
+	trailsCtx.beginPath();
+
+	for (let i = 0; i < stars.length; i++) {
+		const star = stars[i];
+		if (!star.visible) continue;
+
+		const dx = star.x - star.prevX;
+		const dy = star.y - star.prevY;
+
+		trailsCtx.moveTo(star.x, star.y);
+		trailsCtx.lineTo(star.x - dx * HEAD_TAIL, star.y - dy * HEAD_TAIL);
+
+		// core streak on main canvas (keep short)
+		mainCtx.moveTo(star.x, star.y);
+		mainCtx.lineTo(star.x - dx * 1.8, star.y - dy * 1.8);
+	}
+	trailsCtx.stroke();
   });
+
+mainCtx.stroke();
+
+// reset alpha so it won't leak into other drawing
+trailsCtx.globalAlpha = 1;
+trailsCtx.lineWidth = Star.drawWidth;
+
+
 
   mainCtx.stroke();
 

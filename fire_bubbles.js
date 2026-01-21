@@ -9,22 +9,22 @@
   // =======================
   // CONFIG
   // =======================
-  const START_DELAY_MS = 20; //6500 tested
+  const START_DELAY_MS = 0; //6500 tested
 
   const TOTAL = 100;
-  const LIFE_MS = 8000;
+  const LIFE_MS = 50000;
 
   const MIN_INTERVAL = 650;
   const MAX_INTERVAL = 1200;
 
   // ✅ NEW: make the first two spawns more separated
-  const FIRST_SPAWN_DELAY_RANGE  = [400, 900];   // after START_DELAY, when the 1st bubble shows
-  const SECOND_SPAWN_DELAY_RANGE = [1200, 2200]; // gap between 1st and 2nd bubble
-  const MIN_GAP_BETWEEN_SPAWNS   = 950;          // hard minimum gap for all spawns (prevents “too close”)
+  const FIRST_SPAWN_DELAY_RANGE  = [400, 1900];   // after START_DELAY, when the 1st bubble shows
+  const SECOND_SPAWN_DELAY_RANGE = [1200, 5200]; // gap between 1st and 2nd bubble
+  const MIN_GAP_BETWEEN_SPAWNS   = 10000;          // hard minimum gap for all spawns (prevents “too close”)
 
-  const MIN_SIZE = 70;
+  const MIN_SIZE = 85;
   const MAX_SIZE = 150;
-  const MAX_ONSCREEN = 4;
+  const MAX_ONSCREEN = 2;
 
   const CENTER_DEADZONE = 0.34;
   const MIN_X_SEP = 120;
@@ -138,7 +138,7 @@
     const size = randi(MIN_SIZE, MAX_SIZE);
     const x = pickSafeX(size);
 
-    const y0 = h - size * 0.35;
+    const y0 = h - size * -0.3; //spawn loc
     const y1 = -size * 0.65;
 
     const side = (x + size/2) < w/2 ? 'L' : 'R';
@@ -158,8 +158,8 @@
     inner.className = 's5-bubble-inner';
 
     // wobble randomization (left-right)
-    inner.style.setProperty('--wobbleAmp', `${rand(6, 18)}px`);
-    inner.style.setProperty('--wobbleDur', `${randi(2900, 3800)}ms`);
+    inner.style.setProperty('--wobbleAmp', `${rand(36, 48)}px`);
+    inner.style.setProperty('--wobbleDur', `${randi(29000, 38000)}ms`);
     inner.style.setProperty('--wobbleDelay', `${randi(-900, 0)}ms`);
 
     const img = document.createElement('img');
