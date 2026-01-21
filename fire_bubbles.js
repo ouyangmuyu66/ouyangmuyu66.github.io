@@ -15,7 +15,7 @@
   const LIFE_MS = 50000;
 
   const MIN_INTERVAL = 650;
-  const MAX_INTERVAL = 1200;
+  const MAX_INTERVAL = 1000;
 
   // ✅ NEW: make the first two spawns more separated
   const FIRST_SPAWN_DELAY_RANGE  = [400, 1900];   // after START_DELAY, when the 1st bubble shows
@@ -24,7 +24,7 @@
 
   const MIN_SIZE = 85;
   const MAX_SIZE = 150;
-  const MAX_ONSCREEN = 2;
+  const MAX_ONSCREEN = 3;
 
   const CENTER_DEADZONE = 0.34;
   const MIN_X_SEP = 120;

@@ -67,7 +67,16 @@ const COLOR = {
 	Blue: '#1e7fff',
 	Purple: '#e60aff',
 	Gold: '#ffbf36',
-	White: '#ffffff'
+	White: '#ffe9ef',
+	Red:       '#ff477b',  // soft rose
+	Coral:    '#ff1842',
+	Peach:    '#ff3d1f',
+	Lavender: '#652dff',
+	Lilac:    '#9422ff',
+	Sky:      '#009dff',
+	Mint:     '#7fffd4',
+	Gold:     '#ffae00',
+	White:    '#ff2e6c'
 };
 
 // Special invisible color (not rendered, and therefore not in COLOR map)
@@ -1568,9 +1577,9 @@ function render(speed, frameTimeMs) {
     );
 
     burstGradient.addColorStop(0.024, 'rgba(255, 255, 255, 1)');
-    burstGradient.addColorStop(0.125, 'rgba(255, 160, 20, 0.20)');
-    burstGradient.addColorStop(0.32,  'rgba(255, 140, 20, 0.11)');
-    burstGradient.addColorStop(1,     'rgba(255, 120, 20, 0)');
+    burstGradient.addColorStop(0.125, 'rgba(247, 20, 255, 0.28)');
+    burstGradient.addColorStop(0.32,  'rgba(255, 20, 20, 0.17)');
+    burstGradient.addColorStop(1,     'rgba(36, 20, 255, 0)');
 
     trailsCtx.fillStyle = burstGradient;
     trailsCtx.fillRect(bf.x - bf.radius, bf.y - bf.radius, bf.radius * 2, bf.radius * 2);
@@ -1593,11 +1602,11 @@ function render(speed, frameTimeMs) {
   mainCtx.beginPath();
 
 
-// fire work tail
-const LONG_TAIL = isHighQuality ? 5.2 : (isNormalQuality ? 4.2 : 3.2); // long faint part
-const HEAD_TAIL = 1.9;                                                 // short bright head
-const LONG_ALPHA = isLowQuality ? 0.16 : 0.22;                         // fade amount
-const LONG_WIDTH_MULT = 0.75;                                          // thinner long tail
+// firework tail
+const LONG_TAIL = isHighQuality ? 8.0 : (isNormalQuality ? 6.2 : 5.2); // long faint part
+const HEAD_TAIL = 1.1;                                                 // short bright head
+const LONG_ALPHA = isLowQuality ? 0.003 : 0.005;                         // fade amount
+const LONG_WIDTH_MULT = 0.55;                                          // thinner long tail
 
 trailsCtx.lineWidth = Star.drawWidth;
 trailsCtx.lineCap = isLowQuality ? 'square' : 'round';
@@ -2064,37 +2073,37 @@ class Shell {
 		if (this.glitter === 'light') {
 		sparkFreq = 400;
 		sparkSpeed = 0.3;
-		sparkLife = 300;
+		sparkLife = 500;
 		sparkLifeVariation = 2;
 		}
 		else if (this.glitter === 'medium') {
 		sparkFreq = 200;
 		sparkSpeed = 0.44;
-		sparkLife = 700;
+		sparkLife = 900;
 		sparkLifeVariation = 2;
 		}
 		else if (this.glitter === 'heavy') {
 		sparkFreq = 80;
 		sparkSpeed = 0.8;
-		sparkLife = 1400;
+		sparkLife = 1600;
 		sparkLifeVariation = 2;
 		}
 		else if (this.glitter === 'thick') {
 		sparkFreq = 16;
 		sparkSpeed = isHighQuality ? 1.65 : 1.5;
-		sparkLife = 1400;
+		sparkLife = 1600;
 		sparkLifeVariation = 3;
 		}
 		else if (this.glitter === 'streamer') {
 		sparkFreq = 32;
 		sparkSpeed = 1.05;
-		sparkLife = 620;
+		sparkLife = 820;
 		sparkLifeVariation = 2;
 		}
 		else if (this.glitter === 'willow') {
 		sparkFreq = 120;
 		sparkSpeed = 0.34;
-		sparkLife = 1400;
+		sparkLife = 1600;
 		sparkLifeVariation = 3.8;
 		}
 
