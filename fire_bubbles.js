@@ -1,5 +1,9 @@
+/* js/s5_section5_bubbles.js
+   SECTION 5 bubbles — supports pause/resume via window events: s5:pause / s5:resume
+*/
+;(function setupSection5Bubbles(){
+  'use strict';
 
-(function setupSection5Bubbles(){
   const ROOT = document.querySelector('#section5');
   if (!ROOT) return;
 
@@ -9,7 +13,7 @@
   // =======================
   // CONFIG
   // =======================
-  const START_DELAY_MS = 0; //6500 tested
+  const START_DELAY_MS = 0;
 
   const TOTAL = 100;
   const LIFE_MS = 50000;
@@ -17,10 +21,9 @@
   const MIN_INTERVAL = 650;
   const MAX_INTERVAL = 1000;
 
-  // ✅ NEW: make the first two spawns more separated
-  const FIRST_SPAWN_DELAY_RANGE  = [400, 1900];   // after START_DELAY, when the 1st bubble shows
-  const SECOND_SPAWN_DELAY_RANGE = [1200, 5200]; // gap between 1st and 2nd bubble
-  const MIN_GAP_BETWEEN_SPAWNS   = 10000;          // hard minimum gap for all spawns (prevents “too close”)
+  const FIRST_SPAWN_DELAY_RANGE  = [400, 1900];
+  const SECOND_SPAWN_DELAY_RANGE = [1200, 5200];
+  const MIN_GAP_BETWEEN_SPAWNS   = 10000;
 
   const MIN_SIZE = 85;
   const MAX_SIZE = 150;
@@ -49,13 +52,14 @@
   let timer = null;
   let startDelayTimer = null;
 
-  let enabled = false;
-  let stopped = false;
-  let started = false;
+  let enabled = false;        // scheduler allowed
+  let started = false;        // passed start delay
+  let stopped = false;        // finished playlist
+  let pausedByModal = false;  // s5:pause active
+  let inView = false;         // IO state
+  let building = false;
 
   let lastX = null;
-
-  // ✅ NEW: track last spawn time to enforce minimum gap
   let lastSpawnAt = 0;
 
   // =======================
@@ -85,7 +89,7 @@
     const cx0 = (w - dead) / 2;
     const cx1 = (w + dead) / 2;
 
-    for (let attempt = 0; attempt < 6; attempt++){
+    for (let attempt = 0; attempt < 10; attempt++){
       const [ra, rb] = weightedPick(X_WINDOWS);
       let x = rand(ra * w, rb * w);
       x = clamp(x, 0, maxX);
@@ -106,30 +110,50 @@
     return x;
   }
 
+  function probeImage(url){
+    return new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve(true);
+      im.onerror = () => resolve(false);
+      im.src = url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+    });
+  }
+
   async function resolveSrc(i){
     for (const ext of EXT_CANDIDATES){
       const url = `${BASE_DIR}${i}.${ext}`;
       try{
-        const res = await fetch(url, { method:'HEAD' });
-        if (res.ok) return url;
+        const ok = await probeImage(url);
+        if (ok) return url;
       }catch(e){}
     }
     return null;
   }
 
   async function buildPlaylist(){
+    if (building) return;
+    building = true;
+
     playlist = [];
     for (let i = 1; i <= TOTAL; i++){
       const url = await resolveSrc(i);
       if (url) playlist.push({ i, url });
     }
+
+    if (!playlist.length){
+      for (let i = 1; i <= TOTAL; i++){
+        playlist.push({ i, url: `${BASE_DIR}${i}.png` });
+      }
+    }
+
+    building = false;
   }
 
   // =======================
   // SPAWN
   // =======================
   function spawnBubble(item){
-    if (!enabled || stopped) return false;
+    if (!enabled || stopped || pausedByModal || !inView) return false;
     if (onscreen >= MAX_ONSCREEN) return false;
 
     const w = layer.clientWidth  || 1;
@@ -138,7 +162,7 @@
     const size = randi(MIN_SIZE, MAX_SIZE);
     const x = pickSafeX(size);
 
-    const y0 = h - size * -0.3; //spawn loc
+    const y0 = h + size * 0.30;
     const y1 = -size * 0.65;
 
     const side = (x + size/2) < w/2 ? 'L' : 'R';
@@ -157,7 +181,6 @@
     const inner = document.createElement('div');
     inner.className = 's5-bubble-inner';
 
-    // wobble randomization (left-right)
     inner.style.setProperty('--wobbleAmp', `${rand(36, 48)}px`);
     inner.style.setProperty('--wobbleDur', `${randi(29000, 38000)}ms`);
     inner.style.setProperty('--wobbleDelay', `${randi(-900, 0)}ms`);
@@ -179,7 +202,7 @@
     el.style.animation = `s5BubbleFloat ${LIFE_MS}ms linear forwards`;
 
     onscreen++;
-    lastSpawnAt = Date.now(); // ✅ update last spawn time
+    lastSpawnAt = Date.now();
 
     setTimeout(() => {
       el.remove();
@@ -193,14 +216,18 @@
   // SCHEDULER
   // =======================
   function nextDelay(){
-    // special delays for the first two spawns
     if (nextIndex === 0) return randi(FIRST_SPAWN_DELAY_RANGE[0], FIRST_SPAWN_DELAY_RANGE[1]);
     if (nextIndex === 1) return randi(SECOND_SPAWN_DELAY_RANGE[0], SECOND_SPAWN_DELAY_RANGE[1]);
     return randi(MIN_INTERVAL, MAX_INTERVAL);
   }
 
+  function clearTimers(){
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+  }
+
   function scheduleNext(){
-    if (!enabled || stopped) return;
+    if (!enabled || stopped || pausedByModal || !inView) return;
     if (!playlist.length) return;
 
     if (nextIndex >= playlist.length){
@@ -208,53 +235,97 @@
       return;
     }
 
-    // base random delay
     let delay = nextDelay();
 
-    // ✅ enforce minimum gap between spawns (prevents “two at once”)
     const sinceLast = Date.now() - lastSpawnAt;
     const needMore = MIN_GAP_BETWEEN_SPAWNS - sinceLast;
     if (needMore > 0) delay = Math.max(delay, needMore);
 
     timer = setTimeout(() => {
+      if (!enabled || stopped || pausedByModal || !inView) return;
       if (spawnBubble(playlist[nextIndex])) nextIndex++;
       scheduleNext();
     }, delay);
   }
 
-  function bubbleStart(){
+  function startScheduler(){
     enabled = true;
-    if (started) { scheduleNext(); return; }
+    if (stopped) return;
+    clearTimers();
+
+    if (started) {
+      scheduleNext();
+      return;
+    }
 
     startDelayTimer = setTimeout(() => {
-      if (!enabled) return;
+      if (!enabled || pausedByModal || !inView) return;
       started = true;
-      lastSpawnAt = 0; // reset spawn gap tracking on start
       scheduleNext();
     }, START_DELAY_MS);
   }
 
-  function bubbleStop(){
+  function stopSchedulerHard(){
     enabled = false;
-    if (timer) { clearTimeout(timer); timer = null; }
-    if (startDelayTimer) { clearTimeout(startDelayTimer); startDelayTimer = null; }
+    clearTimers();
     started = false;
     lastX = null;
     lastSpawnAt = 0;
   }
+
+  function pauseByModal(){
+    pausedByModal = true;
+    clearTimers();
+  }
+
+  function resumeFromModal(){
+    pausedByModal = false;
+    if (!inView) return;
+    if (!playlist.length) return;
+    if (stopped) return;
+    startScheduler();
+  }
+
+  // =======================
+  // PUBLIC API (optional)
+  // =======================
+  window.Section5Bubbles = {
+    pause: () => pauseByModal(),
+    resume: () => resumeFromModal(),
+    reset: () => { nextIndex = 0; stopped = false; },
+    stop: () => stopSchedulerHard(),
+    start: () => startScheduler(),
+  };
 
   // =======================
   // VISIBILITY CONTROL
   // =======================
   const io = new IntersectionObserver(async ([entry]) => {
     if (!entry) return;
-    if (entry.isIntersecting){
+    inView = !!entry.isIntersecting;
+
+    // If modal has frozen section5, force pause so scheduler won't start
+    if (window.__S5_FROZEN__) pauseByModal();
+
+    if (inView){
       if (!playlist.length) await buildPlaylist();
-      bubbleStart();
+      if (!pausedByModal) startScheduler();
     } else {
-      bubbleStop();
+      stopSchedulerHard();
     }
-  }, { threshold: 0.35 });
+  }, { threshold: 0.05 });
+
 
   io.observe(ROOT);
+
+  // =======================
+  // PAUSE / RESUME EVENTS
+  // =======================
+  window.addEventListener('s5:pause', () => {
+    pauseByModal();
+  });
+
+  window.addEventListener('s5:resume', () => {
+    resumeFromModal();
+  });
 })();

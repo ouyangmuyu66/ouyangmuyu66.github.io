@@ -1294,6 +1294,7 @@ const START_DELAY_MS = 20;   // firework delay
 let startTimer = null;
 
 const io = new IntersectionObserver((entries) => {
+  if (window.__S5_FROZEN__) return;
   const e = entries[0];
   if (!e) return;
 
@@ -1319,6 +1320,52 @@ const io = new IntersectionObserver((entries) => {
 }, { threshold: 0.2 });
 
 io.observe(ROOT);
+
+// ==============================
+// ✅ Global freeze hook (Choice modal etc.)
+// ==============================
+let __S5_IN_VIEW__ = false;
+
+// track view state
+const __oldIOCallback = io.callback; // (ignore if not exists; we handle below)
+const __io2 = new IntersectionObserver((entries) => {
+  const e = entries[0];
+  if (!e) return;
+  __S5_IN_VIEW__ = !!e.isIntersecting;
+}, { threshold: 0.2 });
+__io2.observe(ROOT);
+
+function __s5PauseFireworks() {
+  window.__S5_FROZEN__ = true;
+
+  // stop delayed start
+  clearTimeout(startTimer);
+  startTimer = null;
+
+  // pause simulation + mute
+  store.setState({ soundEnabled: false });
+  togglePause(true);
+}
+
+function __s5ResumeFireworks() {
+  window.__S5_FROZEN__ = false;
+
+  // only resume if section5 is actually visible
+  if (!__S5_IN_VIEW__) return;
+
+  store.setState({ soundEnabled: true });
+  resetAutoLaunchRamp();
+
+  clearTimeout(startTimer);
+  startTimer = setTimeout(() => {
+    // still not frozen?
+    if (!window.__S5_FROZEN__) togglePause(false);
+  }, START_DELAY_MS);
+}
+
+// Listen to your freeze manager events (from HTML freezeAll/resumeAll)
+window.addEventListener('s5:pause', __s5PauseFireworks);
+window.addEventListener('s5:resume', __s5ResumeFireworks);
 
 
 handleResize();
@@ -1979,6 +2026,7 @@ class Shell {
 	}
 	
 	launch(position, launchHeight) {
+		if (window.__S5_FROZEN__ || store.state.paused || store.state.menuOpen) return;
 		const width = stageW;
 		const height = stageH;
 		// Distance from sides of screen to keep shells.

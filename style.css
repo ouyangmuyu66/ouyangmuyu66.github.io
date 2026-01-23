@@ -2229,3 +2229,169 @@ section,
 }
 
 
+/* ============================
+   SECTION 5 Choice Overlay
+   ============================ */
+#section5 #s5-choice-overlay{
+  position: fixed; /* covers everything */
+  inset: 0;
+  z-index: 999999; /* above all layers */
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  font-family: inherit;
+}
+
+#section5 #s5-choice-overlay.is-hidden{
+  display: none;
+}
+
+#section5 #s5-choice-overlay .s5c-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+#section5 #s5-choice-overlay .s5c-card{
+  position: relative;
+  width: min(86vw, 560px);
+  border-radius: 22px;
+  padding: 18px 18px 14px;
+  background: linear-gradient(180deg, rgba(22,22,30,0.92), rgba(12,12,18,0.92));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(255,80,190,0.10),
+    0 0 48px rgba(255,80,190,0.12);
+  transform: translate3d(0, 14px, 0) scale(0.98);
+  opacity: 0;
+  transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 240ms ease;
+}
+
+#section5 #s5-choice-overlay .s5c-head{
+  padding: 6px 6px 10px;
+}
+
+#section5 #s5-choice-overlay .s5c-title{
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.92);
+}
+
+#section5 #s5-choice-overlay .s5c-sub{
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+}
+
+#section5 #s5-choice-overlay .s5c-body{
+  margin: 6px 4px 14px;
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.88);
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-line; /* respects \n */
+  text-shadow: 0 0 18px rgba(255,120,210,0.12);
+  max-height: min(48vh, 360px);
+  overflow: auto;
+}
+
+#section5 #s5-choice-overlay .s5c-actions{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 4px 4px 0;
+}
+
+#section5 #s5-choice-overlay .s5c-btn{
+  border: 0;
+  outline: none;
+  border-radius: 14px;
+  padding: 12px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+  transform: translateZ(0);
+  transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+  will-change: transform;
+}
+
+#section5 #s5-choice-overlay .s5c-btn:active{
+  transform: scale(0.96);
+}
+
+#section5 #s5-choice-overlay .s5c-btn--ghost{
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.82);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+#section5 #s5-choice-overlay .s5c-btn--primary{
+  background: linear-gradient(135deg, rgba(255,80,190,0.92), rgba(120,110,255,0.88));
+  color: rgba(0,0,0,0.88);
+  font-weight: 700;
+  box-shadow: 0 14px 30px rgba(255,80,190,0.18);
+}
+
+#section5 #s5-choice-overlay .s5c-btn:hover{
+  filter: brightness(1.06);
+}
+
+#section5 #s5-choice-overlay .s5c-hint{
+  margin-top: 10px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.40);
+}
+
+/* Open / close states */
+#section5 #s5-choice-overlay.is-open .s5c-backdrop{
+  opacity: 1;
+}
+#section5 #s5-choice-overlay.is-open .s5c-card{
+  transform: translate3d(0, 0, 0) scale(1);
+  opacity: 1;
+}
+
+/* Smooth close */
+#section5 #s5-choice-overlay.is-closing .s5c-backdrop{
+  opacity: 0;
+}
+#section5 #s5-choice-overlay.is-closing .s5c-card{
+  transform: translate3d(0, 10px, 0) scale(0.985);
+  opacity: 0;
+}
+
+/* Small shake for "再想想" */
+#section5 #s5-choice-overlay .s5c-card.is-shake{
+  animation: s5cShake 360ms ease;
+}
+@keyframes s5cShake{
+  0%{ transform: translate3d(0,0,0) }
+  20%{ transform: translate3d(-10px,0,0) }
+  40%{ transform: translate3d(10px,0,0) }
+  60%{ transform: translate3d(-6px,0,0) }
+  80%{ transform: translate3d(6px,0,0) }
+  100%{ transform: translate3d(0,0,0) }
+}
+
+
+/* Freeze ONLY section5 background layers (NOT the modal overlay) */
+#section5.s5-frozen .fw-root,
+#section5.s5-frozen .fw-root *,
+#section5.s5-frozen .s5-bgvideo,
+#section5.s5-frozen #s5-bubble-layer,
+#section5.s5-frozen #s5-bubble-layer *,
+#section5.s5-frozen #s5-lyric-player,
+#section5.s5-frozen #s5-lyric-player *{
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+

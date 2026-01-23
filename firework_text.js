@@ -1,7 +1,8 @@
 /* js/s5_lyric_player.js
-   SECTION 5 only. Fully isolated lyric/text player.
+   SECTION 5 lyric player — hard-freeze + auto-start after modal resume
+   Events: s5:pause / s5:resume
 */
-(() => {
+;(() => {
   'use strict';
 
   const ROOT = document.querySelector('#section5');
@@ -13,11 +14,22 @@
   const track = host.querySelector('.s5lp-track');
   if (!track) return;
 
-  // =========================
-  // CONFIG (tweak freely)
-  // =========================
+  // Inject paused CSS once (covers newly-created spans)
+  (function ensurePausedCSS(){
+    if (document.getElementById('s5lp-paused-style')) return;
+    const st = document.createElement('style');
+    st.id = 's5lp-paused-style';
+    st.textContent = `
+#s5-lyric-player.s5lp-paused, 
+#s5-lyric-player.s5lp-paused *{
+  animation-play-state: paused !important;
+  transition: none !important;
+}`;
+    document.head.appendChild(st);
+  })();
+
   const CFG = {
-    startDelayMs: 20000,
+    startDelayMs: 20,
 
     perCharDelayMs: 250,
     charAnimMs: 570,
@@ -32,29 +44,24 @@
   let LINES = [
     '你在我心里一直很重要',
     '是无法替代的那种',
-
     '我起床的第一件事',
     '是看你的消息',
     '喜欢一个人',
     '会忍不住在意',
     '她的一切',
-
     '在我眼中',
     '你永远是满分',
     '你接纳了',
     '我的不完美',
-
     '我在爱你的时候',
     '也在学着相信',
     '我在相信你的时候',
     '依然选择爱你',
-
     '和你在一起',
     '我感受到了',
     '真正的幸福',
     '你给了我',
     '安全感',
-
     '黑白色的生命',
     '你出现的时候',
     '我才意识到',
@@ -67,12 +74,10 @@
     '我不太确定',
     '但你还在',
     '就够了',
-
     '那年晚上',
     '有点慌',
     '屏幕很亮',
     '你还在线',
-
     '那天的烟花很吵',
     '好漂亮',
     '但我突然很安静',
@@ -81,10 +86,8 @@
     '有一瞬间',
     '我忘了时间',
     '只记得你',
-
     '每次烟花响起',
     '我在想你',
-
     '你的出现',
     '胜过所有'
   ];
@@ -97,40 +100,19 @@
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let running = false;
-  let killed = false;
-  let timers = new Set();
+  function show(){ host.style.display = 'block'; }
+  function hide(){ host.style.display = 'none'; }
 
-  function wait(ms) {
-    return new Promise((resolve) => {
-      const id = setTimeout(() => {
-        timers.delete(id);
-        resolve();
-      }, ms);
-      timers.add(id);
-    });
-  }
-  function clearAllTimers() {
-    for (const t of timers) clearTimeout(t);
-    timers.clear();
-  }
+  function splitToChars(t){ return Array.from(t); }
 
-  function show() { host.style.display = 'block'; }
-  function hide() { host.style.display = 'none'; }
-
-  function splitToChars(text) {
-    return Array.from(text);
-  }
-
-  // ✅ IMPORTANT: never create truly empty line (keeps height stable)
-  function makeLine(text, cls) {
+  function makeLine(text, cls){
     const el = document.createElement('div');
     el.className = `s5lp-line ${cls || ''}`.trim();
 
     const safeText = (text && String(text).length) ? String(text) : ' ';
     const chars = splitToChars(safeText);
 
-    for (const ch of chars) {
+    for (const ch of chars){
       const span = document.createElement('span');
       span.className = 's5lp-char';
       span.textContent = ch === ' ' ? '\u00A0' : ch;
@@ -141,13 +123,7 @@
     return el;
   }
 
-  function setTrackY(px, withTransition) {
-    if (withTransition) track.classList.add('is-sliding');
-    else track.classList.remove('is-sliding');
-    track.style.transform = `translate3d(0, ${px}px, 0)`;
-  }
-
-  function fillLine(el, text, makeCurrent) {
+  function fillLine(el, text, makeCurrent){
     el.classList.remove('is-current', 'is-dim', 'is-placeholder');
     el.classList.add(makeCurrent ? 'is-current' : 'is-dim');
 
@@ -155,7 +131,7 @@
     const safeText = (text && String(text).length) ? String(text) : ' ';
     const chars = splitToChars(safeText);
 
-    for (const ch of chars) {
+    for (const ch of chars){
       const span = document.createElement('span');
       span.className = 's5lp-char';
       span.textContent = ch === ' ' ? '\u00A0' : ch;
@@ -165,150 +141,274 @@
     if (!text || !String(text).length) el.classList.add('is-placeholder');
   }
 
-  async function animateCurrentLineChars(currentEl) {
-    const spans = Array.from(currentEl.querySelectorAll('.s5lp-char'));
-    if (!spans.length) return;
+  let trackY = 0;
+  function setTrackY(px){
+    trackY = px;
+    track.style.transform = `translate3d(0, ${px}px, 0)`;
+  }
 
-    if (reduceMotion) {
-      for (const s of spans) {
+  function setFrozenUI(on){
+    host.classList.toggle('s5lp-paused', !!on);
+  }
+
+  function inView(){
+    const r = ROOT.getBoundingClientRect();
+    return r.top < window.innerHeight * 0.65 && r.bottom > window.innerHeight * 0.35;
+  }
+
+  // =========================
+  // State machine (RAF-driven)
+  // =========================
+  let running = false;
+  let killed = false;
+  let frozen = false;
+
+  let prevEl, currEl, nextEl;
+  let lineH = 56;
+  let idx = 0;
+
+  let phase = 'IDLE';
+  let phaseT = 0;
+  let phaseDur = 0;
+  let swipeFrom = 0;
+  let swipeTo = 0;
+
+  let rafId = 0;
+  let lastTs = 0;
+
+  function gotoPhase(next, dur=0){
+    phase = next;
+    phaseT = 0;
+    phaseDur = Math.max(0, dur|0);
+  }
+
+  function stopPlayer(){
+    killed = true;
+    running = false;
+    phase = 'IDLE';
+    phaseT = 0;
+    phaseDur = 0;
+    idx = 0;
+
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+
+    host.classList.remove('s5lp-fadeout');
+    track.innerHTML = '';
+    hide();
+  }
+
+  function buildLayout(){
+    track.innerHTML = '';
+    track.style.opacity = '1';
+    host.classList.remove('s5lp-fadeout');
+    show();
+
+    prevEl = makeLine('', 'is-dim');
+    currEl = makeLine(LINES[0] ?? '', 'is-current');
+    nextEl = makeLine(LINES[1] ?? '', 'is-dim');
+
+    track.appendChild(prevEl);
+    track.appendChild(currEl);
+    track.appendChild(nextEl);
+
+    const rect = currEl.getBoundingClientRect();
+    lineH = Math.max(44, rect.height || 0) + CFG.lineGapPx;
+
+    setTrackY(-lineH);
+  }
+
+  function setupCharAnim(currentEl){
+    const spans = Array.from(currentEl.querySelectorAll('.s5lp-char'));
+    if (!spans.length) return 0;
+
+    if (reduceMotion){
+      for (const s of spans){
         s.style.animation = 'none';
         s.style.color = '#fff';
         s.style.textShadow =
           '0 0 10px rgba(255,120,210,0.85), 0 0 24px rgba(255,120,210,0.55), 0 0 44px rgba(255,120,210,0.25)';
       }
-      return;
+      return 0;
     }
 
     spans.forEach((s, i) => {
       s.style.animation = 'none';
       s.style.animationDelay = '0ms';
-      // force reflow for reliable restart
-      // eslint-disable-next-line no-unused-expressions
       s.offsetHeight;
-
       s.style.animation = `s5lp-charLight ${CFG.charAnimMs}ms ease forwards`;
       s.style.animationDelay = `${i * CFG.perCharDelayMs}ms`;
     });
 
-    const totalMs = (spans.length - 1) * CFG.perCharDelayMs + CFG.charAnimMs;
-    await wait(totalMs);
+    return (spans.length - 1) * CFG.perCharDelayMs + CFG.charAnimMs;
   }
 
-  async function runPlayer() {
-    if (running) return;
-    running = true;
-    killed = false;
-    host.classList.remove('s5lp-fadeout');
+  function tick(ts){
+    rafId = requestAnimationFrame(tick);
+    if (!running || killed) return;
 
-    track.innerHTML = '';
-    track.style.opacity = '1';
-    setTrackY(0, false);
-    show();
+    if (!lastTs) lastTs = ts;
+    let dt = ts - lastTs;
+    lastTs = ts;
 
-    if (!LINES || !LINES.length) {
-      hide();
-      running = false;
-      return;
-    }
+    if (frozen) dt = 0;
 
-    // Build 3 stable lines
-    let prev = makeLine('', 'is-dim');
-    let curr = makeLine(LINES[0], 'is-current');
-    let next = makeLine(LINES[1] ?? '', 'is-dim');
+    phaseT += dt;
+    if (phaseT > 600000) phaseT = 600000;
 
-    track.appendChild(prev);
-    track.appendChild(curr);
-    track.appendChild(next);
-
-    // measure
-    await wait(0);
-    const rect = curr.getBoundingClientRect();
-    const lineH = Math.max(44, rect.height || 0) + CFG.lineGapPx;
-
-    // center current (middle)
-    setTrackY(-lineH, false);
-
-    for (let idx = 0; idx < LINES.length; idx++) {
-      if (killed) return;
-
-      // Set texts for this frame
-      fillLine(curr, LINES[idx], true);
-      fillLine(prev, idx - 1 >= 0 ? LINES[idx - 1] : '', false);
-      fillLine(next, idx + 1 < LINES.length ? LINES[idx + 1] : '', false);
-
-      await animateCurrentLineChars(curr);
-      if (killed) return;
-
-      await wait(CFG.holdAfterLitMs);
-      if (killed) return;
-
-      if (idx === LINES.length - 1) {
-        host.classList.add('s5lp-fadeout');
-        await wait(560);
-        hide();
-        running = false;
-        return;
+    switch (phase){
+      case 'START_DELAY': {
+        if (phaseT >= CFG.startDelayMs) gotoPhase('CHAR_SETUP', 0);
+        break;
       }
 
-      // ✅ Slide up so NEXT becomes visually centered
-      setTrackY(-2 * lineH, true);
-      await wait(CFG.swipeMs);
-      if (killed) return;
+      case 'CHAR_SETUP': {
+        if (!LINES || !LINES.length) { stopPlayer(); break; }
 
-      // ✅ KEY FIX: rotate line elements so the centered line stays the new "curr"
-      // DOM order was: [prev, curr, next]
-      // After sliding up, "next" is in center. We rotate so:
-      // new order becomes: [curr, next, prev]
-      // then we snap back to -lineH (center) with no flash.
-      track.appendChild(prev); // move old prev to bottom
-      prev = curr;
-      curr = next;
-      next = track.lastElementChild; // which is the moved old prev
+        fillLine(currEl, LINES[idx] ?? '', true);
+        fillLine(prevEl, idx - 1 >= 0 ? (LINES[idx - 1] ?? '') : '', false);
+        fillLine(nextEl, idx + 1 < LINES.length ? (LINES[idx + 1] ?? '') : '', false);
 
-      // snap back to centered position (no transition)
-      setTrackY(-lineH, false);
+        const animTotal = setupCharAnim(currEl);
+        gotoPhase('CHAR_ANIM', animTotal);
+        break;
+      }
 
-      // (optional) ensure the new bottom line doesn't momentarily show old text:
-      // it will be overwritten at the top of next loop anyway, but you can pre-fill here if you want:
-      // fillLine(next, idx + 2 < LINES.length ? LINES[idx + 2] : '', false);
+      case 'CHAR_ANIM': {
+        if (phaseT >= phaseDur) gotoPhase('HOLD', CFG.holdAfterLitMs);
+        break;
+      }
+
+      case 'HOLD': {
+        if (phaseT >= phaseDur){
+          if (idx >= LINES.length - 1){
+            host.classList.add('s5lp-fadeout');
+            gotoPhase('FADEOUT', 560);
+          } else {
+            swipeFrom = -lineH;
+            swipeTo = -2 * lineH;
+            gotoPhase('SWIPE', CFG.swipeMs);
+          }
+        }
+        break;
+      }
+
+      case 'SWIPE': {
+        const t = phaseDur ? Math.min(1, phaseT / phaseDur) : 1;
+        const e = t * t * (3 - 2 * t);
+        setTrackY(swipeFrom + (swipeTo - swipeFrom) * e);
+
+        if (t >= 1){
+          track.appendChild(prevEl);
+          prevEl = currEl;
+          currEl = nextEl;
+          nextEl = track.lastElementChild;
+
+          setTrackY(-lineH);
+
+          idx++;
+          gotoPhase('CHAR_SETUP', 0);
+        }
+        break;
+      }
+
+      case 'FADEOUT': {
+        if (phaseT >= phaseDur){
+          hide();
+          running = false;
+          gotoPhase('IDLE', 0);
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+        break;
+      }
+
+      default:
+        break;
     }
-
-    hide();
-    running = false;
   }
 
-  function stopPlayer() {
-    killed = true;
-    running = false;
-    clearAllTimers();
-    host.classList.remove('s5lp-fadeout');
-    hide();
-    track.innerHTML = '';
+  function startWithDelay(){
+    if (running) return;
+    if (!LINES || !LINES.length) return;
+    if (!inView()) return;
+
+    killed = false;
+    running = true;
+
+    buildLayout();
+    idx = 0;
+
+    gotoPhase('START_DELAY', CFG.startDelayMs);
+
+    lastTs = 0;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
   }
 
+  function startImmediate(){
+    if (running) return;
+    if (!LINES || !LINES.length) return;
+    if (!inView()) return;
+
+    killed = false;
+    running = true;
+
+    buildLayout();
+    idx = 0;
+
+    gotoPhase('CHAR_SETUP', 0);
+
+    lastTs = 0;
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // =========================
+  // Public API
+  // =========================
   window.Section5LyricPlayer = {
-    start: () => runPlayer(),
-    stop: () => stopPlayer()
+    start: () => startImmediate(),
+    startWithDelay: () => startWithDelay(),
+    stop: () => stopPlayer(),
+    freeze: () => { frozen = true; setFrozenUI(true); },
+    resume: () => { frozen = false; setFrozenUI(false); },
+    isRunning: () => running,
   };
 
-  // Auto start/stop by visibility
-  let startTimer = null;
+  // =========================
+  // Freeze hooks
+  // =========================
+  function onPause(){
+    frozen = true;
+    setFrozenUI(true);
+  }
+  function onResume(){
+    frozen = false;
+    setFrozenUI(false);
+    if (!running && inView()) startWithDelay();
+  }
 
+  window.addEventListener('s5:pause', onPause);
+  window.addEventListener('s5:resume', onResume);
+  // If section5 is already frozen when this script runs, apply freeze immediately
+  if (window.__S5_FROZEN__) onPause();
+
+  // Optional global flag support
+  setInterval(() => {
+    if (window.__S5_FROZEN__ && !frozen) onPause();
+    if (!window.__S5_FROZEN__ && frozen) onResume();
+  }, 200);
+
+  // =========================
+  // Auto start/stop by visibility
+  // =========================
   const io = new IntersectionObserver(([entry]) => {
     if (!entry) return;
-
-    if (entry.isIntersecting) {
-      if (running) return;
-      clearTimeout(startTimer);
-      startTimer = setTimeout(() => {
-        // don't rely on stale "entry" object
-        const nowInView = ROOT.getBoundingClientRect().top < window.innerHeight * 0.65 &&
-                          ROOT.getBoundingClientRect().bottom > window.innerHeight * 0.35;
-        if (!nowInView) return;
-        runPlayer();
-      }, CFG.startDelayMs);
+    if (entry.isIntersecting){
+      if (frozen || window.__S5_FROZEN__) return;
+      startWithDelay();
     } else {
-      clearTimeout(startTimer);
       stopPlayer();
     }
   }, { threshold: 0.35 });

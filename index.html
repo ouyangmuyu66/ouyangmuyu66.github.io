@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://fastly.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="icon" href="images/favicon.ico">
   
  
 </head>
@@ -429,6 +430,27 @@
       </div>
     </div>
 
+    <!-- ✅ SECTION 5: Proposal Choice Overlay (TOPMOST) -->
+    <div id="s5-choice-overlay" class="s5c is-hidden" aria-hidden="true">
+      <div class="s5c-backdrop" data-close="0"></div>
+
+      <div class="s5c-card" role="dialog" aria-modal="true" aria-label="Section 5 Choice">
+        <div class="s5c-head">
+          <div class="s5c-title">小宝宝</div>
+          <div class="s5c-sub">先回答我一个问题…</div>
+        </div>
+
+        <div class="s5c-body" id="s5c-body"></div>
+
+        <div class="s5c-actions">
+          <button class="s5c-btn s5c-btn--ghost" id="s5c-btnA" type="button">按钮A</button>
+          <button class="s5c-btn s5c-btn--primary" id="s5c-btnB" type="button">按钮B</button>
+        </div>
+
+        <div class="s5c-hint">（每次只有两个选项哦）</div>
+      </div>
+    </div>    
+
     <!-- ✅ load after section5 exists (after your other scripts is fine) -->
     <!-- <script src="firework_text.js" defer></script> -->
 
@@ -551,28 +573,7 @@
 <script>
 
 
-const bg = document.querySelector('#section5 .s5-bgvideo');
 
-if (bg) {
-  // 确保只播一次
-  bg.loop = false;
-
-  // 播完停在最后一帧
-  bg.addEventListener('ended', () => {
-    // 某些浏览器 ended 时 currentTime 已是 duration
-    // 这里再“钉”一下最后一帧
-    const eps = 0.04; // 约1~2帧的误差
-    bg.currentTime = Math.max(0, bg.duration - eps);
-    bg.pause();
-  });
-
-  // 保险：如果用户跳转回来，确保不重新 loop
-  bg.addEventListener('timeupdate', () => {
-    if (!bg.loop && bg.duration && bg.currentTime >= bg.duration - 0.04) {
-      bg.pause();
-    }
-  });
-}
 
 </script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
@@ -590,18 +591,23 @@ if (bg) {
 
 <script src="firework_text.js"></script>
 <script src="fire_bubbles.js"></script>
+<script src="js/s5_choice_modal.js"></script>
+
+
+
+
 
 <script>
 (() => {
   const section = document.querySelector('#section5');
   const bg = document.querySelector('#section5 .s5-bgvideo');
-
   if (!section || !bg) return;
 
   bg.loop = false;
 
   let started = false;
   let ended = false;
+  let inView = false;
 
   function pinLastFrame() {
     const eps = 0.04;
@@ -612,21 +618,46 @@ if (bg) {
     ended = true;
   }
 
+  function safePlayFromStart() {
+    if (ended) return;
+    try { bg.currentTime = 0; } catch (e) {}
+    const p = bg.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  }
+
+  function ensurePlayIfShould() {
+    // Only start if we are in view and not ended and not frozen
+    if (!inView || ended || window.__S5_FROZEN__) return;
+
+    if (!started) {
+      started = true;
+      ended = false;
+      safePlayFromStart();
+      return;
+    }
+
+    // If it was paused mid-way (e.g., user scrolled away), resume
+    if (bg.paused && bg.currentTime < (bg.duration || Infinity) - 0.05) {
+      const p = bg.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+  }
+
   bg.addEventListener('ended', pinLastFrame);
 
   const io = new IntersectionObserver(([entry]) => {
     if (!entry) return;
 
-    if (entry.isIntersecting) {
-      if (!started) {
-        started = true;
-        ended = false;
-        try { bg.currentTime = 0; } catch(e){}
-        const p = bg.play();
-        if (p?.catch) p.catch(() => {});
-      } else if (ended) {
-        pinLastFrame();
-      }
+    inView = !!entry.isIntersecting;
+
+    // If frozen, always keep it paused (don’t “return” and lose state!)
+    if (window.__S5_FROZEN__) {
+      if (!ended) bg.pause();
+      return;
+    }
+
+    if (inView) {
+      ensurePlayIfShould();
     } else {
       if (!ended) bg.pause();
     }
@@ -634,11 +665,17 @@ if (bg) {
 
   io.observe(section);
 
-  // iOS / iPad Safari 防止后台偷跑
+  // ✅ KEY: when modal closes, freeze manager fires s5:resume → start video then
+  window.addEventListener('s5:resume', ensurePlayIfShould);
+
+  // Extra safety: when modal opens, pause immediately
+  window.addEventListener('s5:pause', () => {
+    if (!ended) bg.pause();
+  });
+
+  // iOS safety
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && !ended) {
-      bg.pause();
-    }
+    if (document.hidden && !ended) bg.pause();
   });
 })();
 </script>
@@ -735,6 +772,229 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+(() => {
+  'use strict';
+
+  const ROOT = document.querySelector('#section5');
+  if (!ROOT) return;
+
+  // Global flag used by other modules
+  window.__S5_FROZEN__ = false;
+
+  const OVERLAY = ROOT.querySelector('#s5-choice-overlay'); // modal overlay element
+  const videoWasPlaying = new WeakMap();
+  let frozen = false;
+
+  const dispatch = (name) => window.dispatchEvent(new Event(name));
+
+  function freezeAll() {
+    if (frozen) return;
+    frozen = true;
+    window.__S5_FROZEN__ = true;
+
+    // Freeze background layers via CSS (modal is excluded by CSS rules)
+    ROOT.classList.add('s5-frozen');
+
+    // Pause videos inside section5 (e.g., bg webm) and remember state
+    ROOT.querySelectorAll('video').forEach(v => {
+      try {
+        videoWasPlaying.set(v, !v.paused && !v.ended);
+        v.pause();
+      } catch (e) {}
+    });
+
+    // Pause Web Animations API animations (rare but useful)
+    try {
+      for (const a of document.getAnimations({ subtree: true })) {
+        const t = a.effect && a.effect.target;
+        if (t && ROOT.contains(t) && a.playState === 'running') {
+          try { a.pause(); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+
+    // Tell bubbles/text/fireworks to pause
+    dispatch('s5:pause');
+  }
+
+  function resumeAll() {
+    if (!frozen) return;
+    frozen = false;
+    window.__S5_FROZEN__ = false;
+
+    ROOT.classList.remove('s5-frozen');
+
+    // Resume videos only if they were playing before
+    ROOT.querySelectorAll('video').forEach(v => {
+      const was = videoWasPlaying.get(v);
+      if (was) {
+        try {
+          const p = v.play?.();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch (e) {}
+      }
+    });
+
+    dispatch('s5:resume');
+  }
+
+  function overlayIsHidden() {
+    if (!OVERLAY) return true;
+    if (OVERLAY.classList.contains('is-hidden')) return true;
+    const cs = getComputedStyle(OVERLAY);
+    return cs.display === 'none' || OVERLAY.hidden;
+  }
+
+  function waitForOverlayHidden() {
+    if (!OVERLAY) return Promise.resolve();
+
+    return new Promise(resolve => {
+      if (overlayIsHidden()) return resolve();
+
+      let done = false;
+      const cleanup = () => {
+        if (done) return;
+        done = true;
+        mo.disconnect();
+        OVERLAY.removeEventListener('transitionend', onEnd, true);
+        OVERLAY.removeEventListener('animationend', onEnd, true);
+        clearTimeout(to);
+        resolve();
+      };
+
+      const onEnd = () => {
+        if (overlayIsHidden()) cleanup();
+      };
+
+      const mo = new MutationObserver(() => {
+        if (overlayIsHidden()) cleanup();
+      });
+
+      mo.observe(OVERLAY, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'hidden', 'aria-hidden']
+      });
+
+      OVERLAY.addEventListener('transitionend', onEnd, true);
+      OVERLAY.addEventListener('animationend', onEnd, true);
+
+      // Fallback: compute a safe timeout from overlay transition/animation durations
+      let maxMs = 700;
+      try {
+        const card = OVERLAY.querySelector('.s5c-card');
+        const backdrop = OVERLAY.querySelector('.s5c-backdrop');
+        const nodes = [OVERLAY, card, backdrop].filter(Boolean);
+
+        const parseList = (s) =>
+          s.split(',').map(x => x.trim()).map(x => {
+            const n = parseFloat(x);
+            if (Number.isNaN(n)) return 0;
+            return x.endsWith('ms') ? n : n * 1000;
+          });
+
+        maxMs = Math.min(1500, Math.max(
+          500,
+          ...nodes.map(n => {
+            const cs = getComputedStyle(n);
+            const d = parseList(cs.transitionDuration).concat(parseList(cs.animationDuration));
+            const del = parseList(cs.transitionDelay).concat(parseList(cs.animationDelay));
+            return Math.max(...d) + Math.max(...del);
+          })
+        ) + 80);
+      } catch (e) {}
+
+      const to = setTimeout(cleanup, maxMs);
+    });
+  }
+
+  function hookChoiceModal(modal) {
+    if (!modal) return;
+
+    // Patch open: freeze immediately BEFORE showing modal (prevents race with other observers)
+    if (typeof modal.open === 'function' && !modal.__s5_freeze_patched_open) {
+      const _open = modal.open.bind(modal);
+      modal.open = (...args) => {
+        freezeAll();
+        return _open(...args);
+      };
+      modal.__s5_freeze_patched_open = true;
+    }
+
+    // Patch close: resume ONLY after close animation fully finished
+    if (typeof modal.close === 'function' && !modal.__s5_freeze_patched_close) {
+      const _close = modal.close.bind(modal);
+      modal.close = (...args) => {
+        const ret = _close(...args);
+
+        Promise.resolve(ret).catch(() => {}).finally(() => {
+          waitForOverlayHidden().then(resumeAll);
+        });
+
+        return ret;
+      };
+      modal.__s5_freeze_patched_close = true;
+    }
+  }
+
+  // Try hook now and keep trying until modal exists
+  const tryHook = () => {
+    if (window.Section5ChoiceModal) hookChoiceModal(window.Section5ChoiceModal);
+  };
+  tryHook();
+  new MutationObserver(tryHook).observe(document.documentElement, { childList: true, subtree: true });
+
+  // Backup: if overlay classes change, keep freeze state correct even if modal code changes later
+  if (OVERLAY) {
+    new MutationObserver(() => {
+      const openish = OVERLAY.classList.contains('is-open') || OVERLAY.classList.contains('is-closing');
+      if (openish) {
+        freezeAll();
+      } else if (frozen) {
+        waitForOverlayHidden().then(resumeAll);
+      }
+    }).observe(OVERLAY, { attributes: true, attributeFilter: ['class', 'style', 'hidden', 'aria-hidden'] });
+  }
+
+  // Expose manual control if you ever need it
+  window.Section5Freeze = {
+    freeze: freezeAll,
+    resume: () => waitForOverlayHidden().then(resumeAll),
+    isFrozen: () => frozen
+  };
+
+  // Auto-open modal once when entering section5 (EARLY threshold so it freezes BEFORE other section5 observers)
+  let openedOnce = false;
+  const io = new IntersectionObserver(([entry]) => {
+    if (!entry || !entry.isIntersecting) return;
+    if (openedOnce) return;
+    openedOnce = true;
+
+    if (window.Section5ChoiceModal?.open) {
+      freezeAll();
+      window.Section5ChoiceModal.open();
+    } else if (OVERLAY) {
+      // fallback if modal object isn't ready
+      freezeAll();
+      OVERLAY.classList.remove('is-hidden');
+      OVERLAY.classList.add('is-open');
+    }
+  }, { threshold: 0.02 });
+
+  io.observe(ROOT);
+})();
 </script>
 
 
