@@ -527,6 +527,7 @@ h1 span.typing {
 @media (max-width: 600px) {
   #lockScreen button {
     width: 100px;
+    
   }
 }
 
@@ -761,31 +762,26 @@ h1 span.typing {
     width: clamp(20px,6vh,110px);
     height: clamp(120px,25vh,300px);
     font-size: clamp(7px, 2.5vh, 30px);
-   
-
     bottom: 200px; /* bottom of section */
     text-align: center;
-
     border-top-left-radius: 60px;   /* half of height for perfect curve */
     border-bottom-left-radius: 60px;  
-
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-
     gap: 2px;
-
     position: absolute;
-
     background-color: rgba(0, 0, 0, 0.5); /* black with 50% transparency */
     color: white;
-    border: none;
-  
+    border: none; 
     cursor: pointer;
-    
-    
     transition: transform 0.1s, background-color 0.1s; /* button animation */
+    box-shadow:
+      0 10px 30px rgba(0,0,0,.45),
+      0 0 0 1px rgba(255,255,255,.05) inset,
+      0 0 22px rgba(92, 63, 255, 0.555);    
+    z-index: 99;
 }
 
 /* Button press effect */
@@ -1546,6 +1542,13 @@ section,
   padding: 5vh;          /* adjust for chart_1 loc , larger to the bottom*/
 }
 
+@media (max-width: 600px) {
+  
+  #section2_1 .container {
+    top: 0vh;
+  }
+}
+
 
 .norm {
   font-family: 'norm';
@@ -1566,12 +1569,20 @@ section,
 .coverflow-wrap{
   margin-top: 15vh; /*move card down*/
   width: 800px; /*card width*/
-  height: min(72vh, 760px);
+  height: min(72vh, 360px);
   display: flex;
   align-items: center;
   justify-content: center;
 
   overflow: hidden; /* ✅ 关键：裁掉第 4 张 */
+}
+
+@media (max-width: 600px) {
+  .coverflow-wrap {
+    margin-top: -5vh; /*move card down*/
+    width: 650px; /*card width*/
+
+  }
 }
 
 .myCoverflow{
@@ -1613,6 +1624,12 @@ section,
   -webkit-backdrop-filter: blur(10px);
 
   transform: translateZ(0);
+}
+
+@media (max-width: 600px) {
+  .card3d {
+    height: 80%;
+  }
 }
 
 /* ✅ 图片区：永远占满上半部分，不会被文字覆盖 */
@@ -1836,7 +1853,7 @@ section,
 /* viewport for the vertical swipe */
 #section5 #s5-lyric-player .s5lp-viewport{
   position: absolute;
-  left: 49%;
+  left: 50%;
   top:10%;
   --feather: 16px;
   -webkit-mask-image: linear-gradient(
@@ -2006,11 +2023,16 @@ section,
   display: flex;
   align-items: center;
   justify-content: center;
-
-
-
   transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);  
 }
+
+@media (max-width: 600px) {
+  .card_31 {
+    width: 80vw;
+    height: 350px;
+  }
+}
+
 
 /* gradient frame */
 .card_31::before{
@@ -2056,9 +2078,14 @@ section,
   filter:
     drop-shadow(-2px -2px 0 #25ccff)  /* top-left */
     drop-shadow( 2px  2px 0 #ff31a2)  /* bottom-right */
-
-
 }
+
+@media (max-width: 600px) {
+  .card_31-frontIcon {
+    height: 150px;
+  }
+}
+
 
 /* ✅ put text under penguin */
 .card_31-frontMedia{
@@ -2104,6 +2131,9 @@ section,
 }
 
 
+
+
+
 /* if delete disables flip*/
 /* ✅ 正确：class 选择器 */
 .card_31.is-open .card_31__content{
@@ -2127,21 +2157,20 @@ section,
   place-content: center;
   place-items: center;
   /* gap: 1px 1px; */
-
-
   box-sizing: border-box;
-
   display: grid;
   grid-template-columns: 0.4fr 0.002fr 0.4fr;
   grid-template-rows: auto auto;
-
   place-content: center;  /* ✅ center the 2 rows as a block */
   place-items: center;    /* ✅ center each cell content */
-
   row-gap: 34px; /*avatar/text gap setting*/
-
 }
 
+@media (max-width: 600px) {
+  .card_31-layout {
+    padding-bottom: 32px;
+  }
+}
 
 /* avatar text */
 .card_31-title{
@@ -2169,16 +2198,26 @@ section,
     linear-gradient(135deg, #03bcf4, #f40388) border-box;    
 }  
 
+@media (max-width: 600px) {
+  .card_31-pic {
+    width: 56px;
+    height: 56px;
+  }
+}
+
 
 .mid-stroke{
   width: 106px;
   height: 106px;
   border-radius: 18px;
+}
 
-  /* border: 2px solid transparent;
-  background:
-    linear-gradient(135deg, #03bcf444, #f4038860) border-box,
-    transparent padding-box; */
+@media (max-width: 600px) {
+  .mid-stroke {
+    width: 56px;
+    height: 56px;
+    padding: 20px;
+  }
 }
 
 .mid-stroke > img{
@@ -2210,9 +2249,16 @@ section,
   margin: 0;
   font-size: 15px;
   line-height: 1.4;
+  text-align: left;
   color: rgba(255,255,255,0.82);
 }
 
+
+@media (max-width: 600px) {
+  .card_31-bottom{
+    width: 89%;
+  }
+}
 
 
 
