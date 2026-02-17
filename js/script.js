@@ -2087,8 +2087,8 @@ class Shell {
 	}
 	
 	burst(x, y) {
-		// 🔥 GLOBAL firework size scale (1 = original)
-		const GLOBAL_SPREAD_SCALE = 0.5;
+		// 🔥 GLOBAL firework size scale (1 = original) firework size
+		const GLOBAL_SPREAD_SCALE = 0.6;
 
 		// Set burst speed so overall burst grows to set size.
 		const speed = (this.spreadSize * GLOBAL_SPREAD_SCALE) / 96;

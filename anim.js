@@ -39,8 +39,8 @@
             const containerRect = el.parentElement.getBoundingClientRect();
             // animate cursor separately, faster than typing
             quoteRight.style.transition = `left ${speed * cursorSpeed}ms linear, top ${speed * cursorSpeed}ms linear`;
-            const yOffset = -15; // loc of quote
-            const xOffset = 25;
+            const yOffset = -8; // loc of quote
+            const xOffset = 5;
             quoteRight.style.left = (letterRect.right - containerRect.left + xOffset) + 'px';
             quoteRight.style.top  = (letterRect.top - containerRect.top + yOffset) + 'px';
           }
@@ -56,7 +56,7 @@
               
 
               // right quote end move right
-              let leftShift = containerRect.width * 0.03; 
+              let leftShift = containerRect.width * 0.09; 
 
               // Optional: increase shift on very small screens
               // if (window.innerWidth < 1300) leftShift = containerRect.width * 0.01; //bigger move to left

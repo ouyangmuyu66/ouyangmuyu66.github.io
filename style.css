@@ -97,6 +97,7 @@ html, body {
   width: 36px;
   height: 36px;
   cursor: pointer;         /* 点击效果 */
+  border-radius: 6px
 }
 
 .avatar img {
@@ -223,7 +224,7 @@ body {
   align-items: center;                  /* center inner content horizontally */
   justify-content: center;              /* optional: center vertically if needed */
   box-sizing: border-box;    
-  outline: 2px dashed rgb(212, 24, 24);           /* padding included in width */
+  /* outline: 2px dashed rgb(212, 24, 24);            */
 }
 
 /*
@@ -237,44 +238,16 @@ huawei mate pro 60 = 360x780
   .quote {
       font-family: 'quote', sans-serif;
       position: absolute; /* position relative to .container */
-      top: -10px;             /* stick to top */
+      top: 10px;             /* stick to top */
   
-      left: -120px;    
+      left: -50px;    
     
-      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
+      font-size: clamp(60px, 8.5vw, 80px); /* scales with viewport */
       line-height: 1;
       color: #ffffff;  
   }
 }
 
-
-@media (max-width: 1280px) {
-  .quote {
-      font-family: 'quote', sans-serif;
-      position: absolute; /* position relative to .container */
-      top: -10px;             /* stick to top */
-  
-      left: -100px;    
-    
-      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
-      line-height: 1;
-      color: #ffffff;  
-  }
-}
-
-@media (max-width: 600px) {
-  .quote {
-      font-family: 'quote', sans-serif;
-      position: absolute; /* position relative to .container */
-      top: -10px;             /* stick to top */
-  
-      left: -60px;    
-    
-      font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */
-      line-height: 1;
-      color: #000000;  
-  }
-}
 
 
 
@@ -291,7 +264,7 @@ huawei mate pro 60 = 360x780
   line-height: 1;
   opacity: 0;          /* hide initially */
   transition: opacity 0.05s ease;
-  font-size: clamp(60px, 8.5vw, 150px); /* scales with viewport */ 
+  font-size: clamp(60px, 8.5vw, 80px); /* scales with viewport */ 
 }
 
 
@@ -303,7 +276,7 @@ huawei mate pro 60 = 360x780
   padding: clamp(10px, 2vw, 35px); /* inner padding */
   padding-left: 3vw;
   box-sizing: border-box;
-  outline: 2px dashed rgb(24, 212, 134);          /* include padding in width */
+  /* outline: 2px dashed rgb(24, 212, 134);         */
 }
 
 .title {
@@ -363,7 +336,7 @@ section {
   flex-direction: column; 
   box-sizing: border-box;
  
-  outline: 2px dashed red;
+  /* outline: 2px dashed red; */
   gap: 0.01em;  
   display: flex;  
   align-items: center;      /* vertical center */
@@ -1550,7 +1523,7 @@ section,
 
 
 #section2_1 .container{
-  top: 15vh;
+  top: 13vh;
   padding: 5vh;          /* adjust for chart_1 loc , larger to the bottom*/
 }
 
@@ -1579,7 +1552,7 @@ section,
 
 /* ---------- Swiper 3D Coverflow (pro UX look) ---------- */
 .coverflow-wrap{
-  margin-top: 15vh; /*move card down*/
+  margin-top: 13vh; /*move card down*/
   width: 800px; /*card width*/
   height: min(72vh, 660px);
   display: flex;
@@ -1734,7 +1707,7 @@ section,
 .myCoverflow .swiper-button-next{
   color: rgba(255,255,255,0.85);
   text-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  top: 45%;
+  top: 42%;
   transform: translateY(-50%);
 }
 
