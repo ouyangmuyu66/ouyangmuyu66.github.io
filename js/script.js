@@ -104,7 +104,7 @@ const MASK = {
   h: 0.30    // 25% height
 };
 
-let SHOW_MASK_DEBUG = true; // 显示红框（定位用）
+let SHOW_MASK_DEBUG = false; // 显示红框（定位用）
 let ENABLE_MASK = true;   // 是否真的遮挡烟花
 // ===============================================
 
@@ -1290,7 +1290,7 @@ function handleResize() {
 }
 // ssssssssssssssssssss
 // ---- Section5 enter/leave control + delayed start ----
-const START_DELAY_MS = 20;   // firework delay
+const START_DELAY_MS = 10000;   // firework delay
 let startTimer = null;
 
 const io = new IntersectionObserver((entries) => {

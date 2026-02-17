@@ -39,8 +39,10 @@
             const containerRect = el.parentElement.getBoundingClientRect();
             // animate cursor separately, faster than typing
             quoteRight.style.transition = `left ${speed * cursorSpeed}ms linear, top ${speed * cursorSpeed}ms linear`;
-            quoteRight.style.left = (letterRect.right - containerRect.left) + 'px';
-            quoteRight.style.top  = (letterRect.top - containerRect.top) + 'px';
+            const yOffset = -15; // loc of quote
+            const xOffset = 25;
+            quoteRight.style.left = (letterRect.right - containerRect.left + xOffset) + 'px';
+            quoteRight.style.top  = (letterRect.top - containerRect.top + yOffset) + 'px';
           }
 
           if (index === letters.length - 1) {
@@ -53,8 +55,8 @@
               let finalLeft = containerRect.width;
               
 
-              // Proportional left shift based on container width
-              let leftShift = containerRect.width * 0.01; 
+              // right quote end move right
+              let leftShift = containerRect.width * 0.03; 
 
               // Optional: increase shift on very small screens
               // if (window.innerWidth < 1300) leftShift = containerRect.width * 0.01; //bigger move to left
@@ -85,7 +87,7 @@
       if (index >= items.length) return;
 
       const el = items[index];
-      const speed = parseInt(el.getAttribute("data-speed"), 10) || 10;
+      const speed = parseInt(el.getAttribute("data-speed"), 10) || 60; //type time
       const cursorSpeed = parseFloat(el.getAttribute("data-cursor-speed")) || 0.0;
 
       typeElement(el, speed, function() {

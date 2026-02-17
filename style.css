@@ -22,6 +22,11 @@ html, body {
   src: url(fonts/SourceHanSansSC-Normal-2.otf);
 }
 
+@font-face {
+  font-family: 'quote';
+  src: url(fonts/quotes3.ttf);
+}
+
 
 
 @media (max-width: 1366px) {
@@ -150,7 +155,8 @@ html, body {
     padding: 10px 14px;
     border-radius: 14px;
     font-size: 15px;
-    line-height: 1;
+    line-height: 1.4; /*vertical text gap*/
+    text-align: left;
     word-wrap: break-word;
     white-space: pre-wrap;
     box-sizing: border-box;     /* include padding in width calculations */
@@ -196,6 +202,7 @@ html, body {
   width: 2em;
   height: auto;
   vertical-align: middle;
+  
 }
 
 body {
@@ -228,7 +235,7 @@ huawei mate pro 60 = 360x780
 
 @media (max-width: 1366px) {
   .quote {
-      font-family: 'norm', sans-serif;
+      font-family: 'quote', sans-serif;
       position: absolute; /* position relative to .container */
       top: -10px;             /* stick to top */
   
@@ -243,7 +250,7 @@ huawei mate pro 60 = 360x780
 
 @media (max-width: 1280px) {
   .quote {
-      font-family: 'norm', sans-serif;
+      font-family: 'quote', sans-serif;
       position: absolute; /* position relative to .container */
       top: -10px;             /* stick to top */
   
@@ -257,7 +264,7 @@ huawei mate pro 60 = 360x780
 
 @media (max-width: 600px) {
   .quote {
-      font-family: 'norm', sans-serif;
+      font-family: 'quote', sans-serif;
       position: absolute; /* position relative to .container */
       top: -10px;             /* stick to top */
   
@@ -275,7 +282,7 @@ huawei mate pro 60 = 360x780
 
 
 .quote-right {
-  font-family: 'norm', sans-serif;
+  font-family: 'quote', sans-serif;
   transition: none;
   position: absolute; /* position relative to .container */
   right: 0;            /* stick to right edge of text container */
@@ -332,6 +339,13 @@ huawei mate pro 60 = 360x780
   width: 1.8em;
   height: 1.8em;
   vertical-align: -0.55em; /* fine-tune baseline */
+  display: inline-block;
+}
+
+img.emoji {
+  width: 1.8em;
+  height: 1.8em;
+  vertical-align: middle;
   display: inline-block;
 }
 
@@ -1532,8 +1546,6 @@ section,
 }
 
 
-
-
 /*section2.1*/
 
 
@@ -1569,7 +1581,7 @@ section,
 .coverflow-wrap{
   margin-top: 15vh; /*move card down*/
   width: 800px; /*card width*/
-  height: min(72vh, 360px);
+  height: min(72vh, 660px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1980,7 +1992,7 @@ section,
 
 #section3_1{
   justify-content: flex-start;
-  padding-top: 15vh;
+  padding-top: 26vh;
   gap: 24px;
 }
 #section3_1 .container{
@@ -2441,3 +2453,453 @@ section,
   transition: none !important;
 }
 
+
+/* ========================= SECTION 6 STYLES ========================= */
+
+
+#section6 {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #0b0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem 2rem 2rem;
+  box-sizing: border-box;
+}
+
+/* Animated background effect */
+#section6::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%);
+  animation: s6-bg-float 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes s6-bg-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-10px, 10px) scale(1.05); }
+  66% { transform: translate(10px, -10px) scale(0.95); }
+}
+
+/* Header */
+.s6-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 1;
+  animation: s6-fade-in 0.8s ease-out;
+}
+
+@keyframes s6-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.s6-title {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: rgba(245, 242, 255, 0.95);
+  margin: 1rem 0 0.5rem 0; /*titles loc*/
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  letter-spacing: 0.5px;
+
+}
+
+.s6-subtitle {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.479);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Charts Grid */
+.s6-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+  gap: 0.8rem;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  align-content: start;
+}
+
+/* Chart Cards */
+.s6-chart-card {
+  background: rgba(14, 10, 28, 0.65);
+  border: 1px solid rgba(145, 105, 255, 0.25);
+  border-radius: 10px;
+  padding: 1.2rem;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  
+  /* ✅ CHANGE THIS TO CONTROL HEIGHT */
+  height: 250px;  /* <-- EDIT THIS NUMBER! */
+  top: -20px;
+
+
+
+ 
+
+  
+  display: flex;
+  flex-direction: column;
+}
+
+.s6-chart-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(139, 92, 246, 0.6) 50%, 
+    transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.s6-chart-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(145, 105, 255, 0.45);
+  box-shadow: 
+    0 12px 32px rgba(139, 92, 246, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.s6-chart-card:hover::before {
+  opacity: 1;
+}
+
+/* Chart Wrapper */
+.s6-chart-wrapper {
+  width: 100%;
+  /* ❌ REMOVED: flex: 1 */
+  height: 100%;  /* ✅ Takes full height of card */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.s6-chart {
+  width: 100%;
+  height: 100%;  /* ✅ Takes full height of wrapper */
+  /* ❌ REMOVED: flex: 1 */
+  /* ❌ REMOVED: min-height */
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Responsive Design */
+@media (min-width: 1366px) {
+  .s6-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .s6-chart-card {
+    min-height: 120px;
+  }
+  
+  .s6-chart {
+    min-height: 60px;
+  }
+}
+
+
+
+/* Touch interactions */
+@media (hover: none) and (pointer: coarse) {
+  .s6-chart-card {
+    transition: all 0.3s ease;
+  }
+  
+  .s6-chart-card:active {
+    transform: scale(0.98);
+    border-color: rgba(145, 105, 255, 0.5);
+  }
+}
+
+/* Loading state */
+.s6-chart-card[data-loading="true"]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 3px solid rgba(139, 92, 246, 0.2);
+  border-top-color: rgba(139, 92, 246, 0.8);
+  border-radius: 50%;
+  animation: s6-spin 0.8s linear infinite;
+}
+
+@keyframes s6-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* AOS Animation support */
+[data-aos="fade-up"] {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-aos="fade-up"].aos-animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* =========================
+   Enhanced Section 5 Modal Animations (replaces previous versions)
+   ========================= */
+
+/* IMAGE CONTAINER - Enhanced version */
+.s5c-image-container {
+  position: absolute;
+  top: 20%;
+  left: 40%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 180px;
+  height: 180px;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.s5c-image-container.is-visible {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.s5c-reaction-image { /*shouzhe*/
+  width: 300px;
+  height: 300px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+  animation: s5c-image-float 2s ease-in-out infinite;
+}
+
+/* CARD ANIMATIONS - Enhanced versions */
+@keyframes s5c-celebrate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes s5c-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) rotate(-1deg); }
+  20%, 40%, 60%, 80% { transform: translateX(8px) rotate(1deg); }
+}
+
+@keyframes s5c-dramatic-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-12px) rotate(-2deg) scale(0.98); }
+  20%, 40%, 60%, 80% { transform: translateX(12px) rotate(2deg) scale(0.98); }
+}
+
+@keyframes s5c-heartbeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.05); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.08); }
+  40% { transform: scale(1); }
+}
+
+@keyframes s5c-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-15px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-8px); }
+}
+
+@keyframes s5c-gentle {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes s5c-backdrop-pulse {
+  0%, 100% { background-color: rgba(0, 0, 0, 0.6); }
+  50% { background-color: rgba(139, 92, 246, 0.15); }
+}
+
+/* BUTTON ANIMATIONS - Enhanced versions */
+@keyframes s5c-btn-yes {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.92); background-color: rgba(124, 255, 119, 0.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes s5c-btn-no {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(0.95) rotate(-2deg); }
+  50% { transform: scale(0.92) rotate(2deg); background-color: rgba(255, 107, 157, 0.2); }
+  75% { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* PARTICLE EFFECTS - Enhanced versions */
+.s5c-confetti {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  top: -10%;
+  pointer-events: none;
+  z-index: 10000;
+  animation: s5c-confetti-fall linear forwards;
+  opacity: 0;
+}
+
+@keyframes s5c-confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(1080deg);
+    opacity: 0;
+  }
+}
+
+.s5c-heart {
+  position: absolute;
+  bottom: 10%;
+  color: #ff6b9d;
+  pointer-events: none;
+  z-index: 1000;
+  animation: s5c-heart-float 1.5s ease-out forwards;
+  opacity: 0;
+  font-size: 24px;
+  text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+}
+
+@keyframes s5c-heart-float {
+  0% {
+    transform: translateY(0) scale(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60vh) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes s5c-image-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+}
+
+/* Body transition */
+#s5c-body {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Button hover effects */
+.s5c-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.s5c-btn:active {
+  transform: translateY(0);
+}
+
+/* MOBILE OPTIMIZATIONS */
+@media (max-width: 768px) {
+  .s5c-image-container {
+    width: 140px;
+    height: 140px;
+  }
+
+  .s5c-confetti {
+    width: 8px;
+    height: 8px;
+  }
+
+  .s5c-heart {
+    font-size: 20px;
+  }
+
+  @keyframes s5c-shake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-6px) rotate(-1deg); }
+    20%, 40%, 60%, 80% { transform: translateX(6px) rotate(1deg); }
+  }
+
+  @keyframes s5c-dramatic-shake {
+    0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) rotate(-1.5deg) scale(0.98); }
+    20%, 40%, 60%, 80% { transform: translateX(8px) rotate(1.5deg) scale(0.98); }
+  }
+}
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+  .s5c-image-container,
+  .s5c-reaction-image,
+  #s5c-body,
+  .s5c-confetti,
+  .s5c-heart,
+  .s5c-btn {
+    animation: none !important;
+    transition: opacity 0.2s ease !important;
+  }
+
+  .s5c-card {
+    animation: none !important;
+  }
+}
+
+/* PERFORMANCE */
+.s5c-card,
+.s5c-image-container,
+.s5c-reaction-image,
+.s5c-confetti,
+.s5c-heart {
+  will-change: transform;
+}
+
+.s5c-backdrop {
+  will-change: background-color;
+}
